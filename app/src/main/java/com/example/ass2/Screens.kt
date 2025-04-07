@@ -7,8 +7,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -28,9 +29,10 @@ import com.example.ass2.Models.taskList2
 fun StudyManagementScreen(
     onNavigateToUrgent: () -> Unit,
     onNavigateToNotUrgent: () -> Unit,
+    onNavigateToImportant: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(
+    LazyColumn(
         modifier = modifier
             .fillMaxSize()
             .background(
@@ -45,48 +47,59 @@ fun StudyManagementScreen(
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(
-            "📚 Lisa's Study & Time Manager",
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold,
-            color = Color.White,
-            fontSize = 40.8.sp,
-            textAlign = TextAlign.Center
-        )
-        Spacer(modifier = Modifier.height(20.dp))
-        HeaderSection()
-        Spacer(modifier = Modifier.height(20.dp))
-        SectionTitle("📌 Priority Matrix")
-        PriorityMatrix(
-            onNavigateToUrgent = onNavigateToUrgent,
-            onNavigateToNotUrgent = onNavigateToNotUrgent
-        )
-        Spacer(modifier = Modifier.height(14.dp))
-        SectionTitle("⏳ Daily Schedule")
-        StudyTaskCard(
-            title = "🟦 Classes",
-            subtitle = "📖 Lecture sessions",
-            description = "🕒 9:00 AM - 12:00 PM",
-            backgroundBrush = Brush.horizontalGradient(
-                colors = listOf(Color(0xFF1976D2), Color(0xFF64B5F6))
+        item {
+            Text(
+                "📚 Lisa's Study & Time Manager",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                color = Color.White,
+                fontSize = 40.8.sp,
+                textAlign = TextAlign.Center
             )
-        )
-        StudyTaskCard(
-            title = "🟧 Work Shifts",
-            subtitle = "💼 Part-time job",
-            description = "🕒 2:00 PM - 5:00 PM",
-            backgroundBrush = Brush.horizontalGradient(
-                colors = listOf(Color(0xFFD84315), Color(0xFFFF7043))
+        }
+        item { Spacer(modifier = Modifier.height(20.dp)) }
+        item { HeaderSection() }
+        item { Spacer(modifier = Modifier.height(20.dp)) }
+        item { SectionTitle("📌 Priority Matrix") }
+        item {
+            PriorityMatrix(
+                onNavigateToUrgent = onNavigateToUrgent,
+                onNavigateToNotUrgent = onNavigateToNotUrgent,
+                onNavigateToImportant = onNavigateToImportant
             )
-        )
-        StudyTaskCard(
-            title = "🟪 Study Sessions",
-            subtitle = "📚 Focused study time",
-            description = "🕒 6:00 PM - 8:00 PM",
-            backgroundBrush = Brush.horizontalGradient(
-                colors = listOf(Color(0xFF8E24AA), Color(0xFFBA68C8))
+        }
+        item { Spacer(modifier = Modifier.height(14.dp)) }
+        item { SectionTitle("⏳ Daily Schedule") }
+        item {
+            StudyTaskCard(
+                title = "🟦 Classes",
+                subtitle = "📖 Lecture sessions",
+                description = "🕒 9:00 AM - 12:00 PM",
+                backgroundBrush = Brush.horizontalGradient(
+                    colors = listOf(Color(0xFF1976D2), Color(0xFF64B5F6))
+                )
             )
-        )
+        }
+        item {
+            StudyTaskCard(
+                title = "🟧 Work Shifts",
+                subtitle = "💼 Part-time job",
+                description = "🕒 2:00 PM - 5:00 PM",
+                backgroundBrush = Brush.horizontalGradient(
+                    colors = listOf(Color(0xFFD84315), Color(0xFFFF7043))
+                )
+            )
+        }
+        item {
+            StudyTaskCard(
+                title = "🟪 Study Sessions",
+                subtitle = "📚 Focused study time",
+                description = "🕒 6:00 PM - 8:00 PM",
+                backgroundBrush = Brush.horizontalGradient(
+                    colors = listOf(Color(0xFF8E24AA), Color(0xFFBA68C8))
+                )
+            )
+        }
     }
 }
 
@@ -123,7 +136,8 @@ fun SectionTitle(title: String) {
 @Composable
 fun PriorityMatrix(
     onNavigateToUrgent: () -> Unit,
-    onNavigateToNotUrgent: () -> Unit
+    onNavigateToNotUrgent: () -> Unit,
+    onNavigateToImportant: () -> Unit
 ) {
     val priorityTasks = listOf(
         PriorityTask(
@@ -151,7 +165,7 @@ fun PriorityMatrix(
             backgroundBrush = Brush.horizontalGradient(
                 colors = listOf(Color(0xFFFFA000), Color(0xFFFFD54F))
             ),
-            onClick = null
+            onClick = onNavigateToImportant
         ),
         PriorityTask(
             title = "⚪ Study & Review",
@@ -224,6 +238,139 @@ fun StudyTaskCard(
     }
 }
 
+// ------------------ 新增：可切换任务卡组件 ------------------
+
+@Composable
+fun ToggleableTaskCard(
+    title: String,
+    deadline: String,
+    description: String,
+    modifier: Modifier = Modifier
+) {
+    var isCompleted by remember { mutableStateOf(false) }
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp)
+            .clickable { isCompleted = !isCompleted },
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+        colors = CardDefaults.cardColors(containerColor = if (isCompleted) Color(0xFFB0BEC5) else Color.White)
+    ) {
+        Row(
+            modifier = Modifier.padding(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(text = title, fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Color.Black)
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(text = deadline, fontSize = 12.sp, color = Color.Gray)
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(text = description, fontSize = 12.sp, color = Color.Black.copy(alpha = 0.8f))
+            }
+            if (isCompleted) {
+                Icon(
+                    imageVector = Icons.Default.Check,
+                    contentDescription = "Completed",
+                    tint = Color.Green
+                )
+            }
+        }
+    }
+}
+
+// ------------------ 新增：大字号可切换任务卡组件（用于 Urgent & Important 页面） ------------------
+
+@Composable
+fun ToggleableTaskCardLarge(
+    title: String,
+    deadline: String,
+    description: String,
+    modifier: Modifier = Modifier
+) {
+    var isCompleted by remember { mutableStateOf(false) }
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp)
+            .clickable { isCompleted = !isCompleted },
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+        colors = CardDefaults.cardColors(containerColor = if (isCompleted) Color(0xFFB0BEC5) else Color.White)
+    ) {
+        Row(
+            modifier = Modifier.padding(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(text = title, fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Color.Black)
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(text = deadline, fontSize = 16.sp, color = Color.Gray)
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(text = description, fontSize = 16.sp, color = Color.Black.copy(alpha = 0.8f))
+            }
+            if (isCompleted) {
+                Icon(
+                    imageVector = Icons.Default.Check,
+                    contentDescription = "Completed",
+                    tint = Color.Green
+                )
+            }
+        }
+    }
+}
+
+// ------------------ 新增：大字号任务卡组件（用于 Urgent & Important 页面 Work & Social Commitments 部分） ------------------
+@Composable
+fun TaskCardLarge(
+    title: String,
+    deadline: String,
+    description: String
+) {
+    // 使用大字号可切换组件确保任务可点击
+    ToggleableTaskCardLarge(title, deadline, description)
+}
+
+// ------------------ 新增：中字号可切换任务卡组件（用于 Urgent Not Important 和 Important Not Urgent 页面） ------------------
+@Composable
+fun ToggleableTaskCardMedium(
+    title: String,
+    deadline: String,
+    description: String,
+    modifier: Modifier = Modifier
+) {
+    var isCompleted by remember { mutableStateOf(false) }
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp)
+            .clickable { isCompleted = !isCompleted },
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+        colors = CardDefaults.cardColors(containerColor = if (isCompleted) Color(0xFFB0BEC5) else Color.White)
+    ) {
+        Row(
+            modifier = Modifier.padding(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(text = title, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color.Black)
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(text = deadline, fontSize = 14.sp, color = Color.Gray)
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(text = description, fontSize = 14.sp, color = Color.Black.copy(alpha = 0.8f))
+            }
+            if (isCompleted) {
+                Icon(
+                    imageVector = Icons.Default.Check,
+                    contentDescription = "Completed",
+                    tint = Color.Green
+                )
+            }
+        }
+    }
+}
+
 // ------------------ Urgent & Important 页面 ------------------
 
 @Composable
@@ -268,6 +415,7 @@ fun UrgentAndImportantScreen(onBackToMain: () -> Unit, modifier: Modifier = Modi
                 )
                 Spacer(modifier = Modifier.height(8.dp))
             }
+            // 使用大字号可切换任务卡组件展示紧急且重要任务
             items(
                 items = listOf(
                     Task("Complete Assignment", "Due today at 11:59 PM", "Ensure all sections are well written and formatted."),
@@ -275,7 +423,7 @@ fun UrgentAndImportantScreen(onBackToMain: () -> Unit, modifier: Modifier = Modi
                     Task("Project Deadline", "Submit group project by 5 PM", "Review final document and confirm all contributions.")
                 )
             ) { task ->
-                TaskCard(task.title, task.deadline, task.description)
+                ToggleableTaskCardLarge(task.title, task.deadline, task.description)
             }
             item {
                 Spacer(modifier = Modifier.height(16.dp))
@@ -290,13 +438,14 @@ fun UrgentAndImportantScreen(onBackToMain: () -> Unit, modifier: Modifier = Modi
                 )
                 Spacer(modifier = Modifier.height(8.dp))
             }
+            // 使用大字号可切换任务卡组件展示工作与社交任务，确保可点击
             items(
                 items = listOf(
                     Task("Part-time Job Shift", "Today from 4 PM - 8 PM", "Assist customers and manage store inventory."),
                     Task("Dinner with Friends", "Tonight at 7:30 PM", "Catch up and enjoy quality time at the cafe.")
                 )
             ) { task ->
-                TaskCard(task.title, task.deadline, task.description)
+                ToggleableTaskCardLarge(task.title, task.deadline, task.description)
             }
             item { Spacer(modifier = Modifier.height(16.dp)) }
         }
@@ -370,6 +519,7 @@ fun UrgentNotImportantScreen(onBackToMain: () -> Unit, modifier: Modifier = Modi
                 )
                 Spacer(modifier = Modifier.height(12.dp))
             }
+            // 使用中字号可切换任务卡组件展示 urgent but not important 任务
             items(
                 items = taskList1.chunked(2)
             ) { row ->
@@ -378,12 +528,11 @@ fun UrgentNotImportantScreen(onBackToMain: () -> Unit, modifier: Modifier = Modi
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     row.forEach { task ->
-                        TaskCard3(
-                            task.title,
-                            task.deadline,
-                            task.description,
-                            Modifier.weight(1f),
-                            onClick = { /* 可添加点击事件 */ }
+                        ToggleableTaskCardMedium(
+                            title = task.title,
+                            deadline = task.deadline,
+                            description = task.description,
+                            modifier = Modifier.weight(1f)
                         )
                     }
                 }
@@ -402,6 +551,7 @@ fun UrgentNotImportantScreen(onBackToMain: () -> Unit, modifier: Modifier = Modi
                 )
                 Spacer(modifier = Modifier.height(12.dp))
             }
+            // 同样使用中字号可切换任务卡组件展示第二组任务
             items(
                 items = taskList2.chunked(2)
             ) { row ->
@@ -410,12 +560,11 @@ fun UrgentNotImportantScreen(onBackToMain: () -> Unit, modifier: Modifier = Modi
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     row.forEach { task ->
-                        TaskCard3(
-                            task.title,
-                            task.deadline,
-                            task.description,
-                            Modifier.weight(1f),
-                            onClick = { /* 可添加点击事件 */ }
+                        ToggleableTaskCardMedium(
+                            title = task.title,
+                            deadline = task.deadline,
+                            description = task.description,
+                            modifier = Modifier.weight(1f)
                         )
                     }
                 }
@@ -455,3 +604,82 @@ fun TaskCard3(
     }
 }
 
+// ------------------ Important Not Urgent 页面 ------------------
+
+@Composable
+fun ImportantNotUrgentScreen(onBackToMain: () -> Unit, modifier: Modifier = Modifier) {
+    Scaffold(
+        bottomBar = {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+                Button(
+                    onClick = onBackToMain,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.White)
+                ) {
+                    Text("Back to Main", color = Color.Black, fontSize = 12.sp)
+                }
+            }
+        }
+    ) { paddingValues ->
+        LazyColumn(
+            modifier = modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(Color(0xFFFFA000), Color(0xFFFFD54F))
+                    )
+                )
+                .padding(paddingValues)
+                .padding(horizontal = 16.dp, vertical = 16.dp)
+        ) {
+            item {
+                Text(
+                    "🟡 Important Not Urgent Tasks",
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    fontSize = 20.sp,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+            // 这里使用中字号可切换任务卡组件展示 Important Not Urgent 任务
+            items(
+                items = listOf(
+                    Task("Complete Research Paper", "Due: Next Monday", "Focus on data analysis section."),
+                    Task("Prepare Group Presentation", "Team meeting at 3 PM", "Finalize slides and rehearse key points."),
+                    Task("Revise for Midterm", "Subjects: Math & Computer Science", "Cover core concepts and problem-solving techniques.")
+                )
+            ) { task ->
+                ToggleableTaskCardMedium(task.title, task.deadline, task.description)
+            }
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    "💼 Part-Time Job & Social Activities",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    fontSize = 18.sp,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+            // 同样使用中字号可切换任务卡组件展示第二组任务
+            items(
+                items = listOf(
+                    Task("Library Assistant Shift", "Today 2 PM - 6 PM", "Assist students and organize book sections."),
+                    Task("Coding Club Meeting", "Tomorrow at 5 PM", "Discuss app development strategies."),
+                    Task("Volunteer Event", "Saturday at 10 AM", "Help organize a charity fundraiser.")
+                )
+            ) { task ->
+                ToggleableTaskCardMedium(task.title, task.deadline, task.description)
+            }
+        }
+    }
+}

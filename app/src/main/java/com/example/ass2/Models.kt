@@ -2,7 +2,12 @@ package com.example.ass2.Models
 
 import androidx.compose.ui.graphics.Brush
 
-data class Task(val title: String, val deadline: String, val description: String)
+data class Task(
+    val title: String,
+    val deadline: String,
+    val description: String,
+    var isCompleted: Boolean = false
+)
 
 data class PriorityTask(
     val title: String,

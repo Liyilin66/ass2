@@ -9,7 +9,8 @@ import com.example.ass2.Screens.*
 enum class AppScreen {
     MAIN,
     URGENT,
-    NOT_URGENT
+    NOT_URGENT,
+    IMPORTANT
 }
 
 @Composable
@@ -20,7 +21,8 @@ fun AppNavigation() {
             AppScreen.MAIN -> {
                 StudyManagementScreen(
                     onNavigateToUrgent = { currentScreen = AppScreen.URGENT },
-                    onNavigateToNotUrgent = { currentScreen = AppScreen.NOT_URGENT }
+                    onNavigateToNotUrgent = { currentScreen = AppScreen.NOT_URGENT },
+                    onNavigateToImportant = { currentScreen = AppScreen.IMPORTANT }
                 )
             }
             AppScreen.URGENT -> {
@@ -29,7 +31,9 @@ fun AppNavigation() {
             AppScreen.NOT_URGENT -> {
                 UrgentNotImportantScreen(onBackToMain = { currentScreen = AppScreen.MAIN })
             }
+            AppScreen.IMPORTANT -> {
+                ImportantNotUrgentScreen(onBackToMain = { currentScreen = AppScreen.MAIN })
+            }
         }
     }
 }
-
