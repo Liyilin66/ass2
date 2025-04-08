@@ -9,7 +9,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -20,8 +20,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ass2.Models.Task
 import com.example.ass2.Models.PriorityTask
-import com.example.ass2.Models.taskList1
-import com.example.ass2.Models.taskList2
+import com.example.ass2.TaskViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
+
 
 // ------------------ 主页面与子组件 ------------------
 
@@ -238,21 +239,22 @@ fun StudyTaskCard(
     }
 }
 
-// ------------------ 新增：可切换任务卡组件 ------------------
+// ------------------ 修改后的可切换任务卡组件 ------------------
 
 @Composable
 fun ToggleableTaskCard(
     title: String,
     deadline: String,
     description: String,
+    isCompleted: Boolean,
+    onToggle: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var isCompleted by remember { mutableStateOf(false) }
     Card(
         modifier = modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp)
-            .clickable { isCompleted = !isCompleted },
+            .clickable { onToggle() },
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
         colors = CardDefaults.cardColors(containerColor = if (isCompleted) Color(0xFFB0BEC5) else Color.White)
@@ -279,21 +281,20 @@ fun ToggleableTaskCard(
     }
 }
 
-// ------------------ 新增：大字号可切换任务卡组件（用于 Urgent & Important 页面） ------------------
-
 @Composable
 fun ToggleableTaskCardLarge(
     title: String,
     deadline: String,
     description: String,
+    isCompleted: Boolean,
+    onToggle: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var isCompleted by remember { mutableStateOf(false) }
     Card(
         modifier = modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp)
-            .clickable { isCompleted = !isCompleted },
+            .clickable { onToggle() },
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
         colors = CardDefaults.cardColors(containerColor = if (isCompleted) Color(0xFFB0BEC5) else Color.White)
@@ -320,31 +321,20 @@ fun ToggleableTaskCardLarge(
     }
 }
 
-// ------------------ 新增：大字号任务卡组件（用于 Urgent & Important 页面 Work & Social Commitments 部分） ------------------
-@Composable
-fun TaskCardLarge(
-    title: String,
-    deadline: String,
-    description: String
-) {
-    // 使用大字号可切换组件确保任务可点击
-    ToggleableTaskCardLarge(title, deadline, description)
-}
-
-// ------------------ 新增：中字号可切换任务卡组件（用于 Urgent Not Important 和 Important Not Urgent 页面） ------------------
 @Composable
 fun ToggleableTaskCardMedium(
     title: String,
     deadline: String,
     description: String,
+    isCompleted: Boolean,
+    onToggle: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var isCompleted by remember { mutableStateOf(false) }
     Card(
         modifier = modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp)
-            .clickable { isCompleted = !isCompleted },
+            .clickable { onToggle() },
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
         colors = CardDefaults.cardColors(containerColor = if (isCompleted) Color(0xFFB0BEC5) else Color.White)
@@ -375,6 +365,7 @@ fun ToggleableTaskCardMedium(
 
 @Composable
 fun UrgentAndImportantScreen(onBackToMain: () -> Unit, modifier: Modifier = Modifier) {
+    val taskViewModel: TaskViewModel = viewModel()
     Scaffold(
         bottomBar = {
             Box(
@@ -415,15 +406,14 @@ fun UrgentAndImportantScreen(onBackToMain: () -> Unit, modifier: Modifier = Modi
                 )
                 Spacer(modifier = Modifier.height(8.dp))
             }
-            // 使用大字号可切换任务卡组件展示紧急且重要任务
-            items(
-                items = listOf(
-                    Task("Complete Assignment", "Due today at 11:59 PM", "Ensure all sections are well written and formatted."),
-                    Task("Prepare for Exam", "Review notes and practice questions", "Allocate at least 3 hours to revise core concepts."),
-                    Task("Project Deadline", "Submit group project by 5 PM", "Review final document and confirm all contributions.")
+            items(taskViewModel.urgentImportantTasks) { task ->
+                ToggleableTaskCardLarge(
+                    title = task.title,
+                    deadline = task.deadline,
+                    description = task.description,
+                    isCompleted = task.isCompleted,
+                    onToggle = { taskViewModel.toggleTask(task) }
                 )
-            ) { task ->
-                ToggleableTaskCardLarge(task.title, task.deadline, task.description)
             }
             item {
                 Spacer(modifier = Modifier.height(16.dp))
@@ -438,40 +428,16 @@ fun UrgentAndImportantScreen(onBackToMain: () -> Unit, modifier: Modifier = Modi
                 )
                 Spacer(modifier = Modifier.height(8.dp))
             }
-            // 使用大字号可切换任务卡组件展示工作与社交任务，确保可点击
-            items(
-                items = listOf(
-                    Task("Part-time Job Shift", "Today from 4 PM - 8 PM", "Assist customers and manage store inventory."),
-                    Task("Dinner with Friends", "Tonight at 7:30 PM", "Catch up and enjoy quality time at the cafe.")
+            items(taskViewModel.workSocialTasks) { task ->
+                ToggleableTaskCardLarge(
+                    title = task.title,
+                    deadline = task.deadline,
+                    description = task.description,
+                    isCompleted = task.isCompleted,
+                    onToggle = { taskViewModel.toggleTask(task) }
                 )
-            ) { task ->
-                ToggleableTaskCardLarge(task.title, task.deadline, task.description)
             }
             item { Spacer(modifier = Modifier.height(16.dp)) }
-        }
-    }
-}
-
-@Composable
-fun TaskCard(title: String, deadline: String, description: String) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
-    ) {
-        Column(
-            modifier = Modifier.padding(8.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.Start
-        ) {
-            Text(text = title, fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Color.Black)
-            Spacer(modifier = Modifier.height(2.dp))
-            Text(text = deadline, fontSize = 12.sp, color = Color.Gray)
-            Spacer(modifier = Modifier.height(2.dp))
-            Text(text = description, fontSize = 12.sp, color = Color.Black.copy(alpha = 0.8f))
         }
     }
 }
@@ -480,6 +446,7 @@ fun TaskCard(title: String, deadline: String, description: String) {
 
 @Composable
 fun UrgentNotImportantScreen(onBackToMain: () -> Unit, modifier: Modifier = Modifier) {
+    val taskViewModel: TaskViewModel = viewModel()
     Scaffold(
         bottomBar = {
             Box(
@@ -519,10 +486,7 @@ fun UrgentNotImportantScreen(onBackToMain: () -> Unit, modifier: Modifier = Modi
                 )
                 Spacer(modifier = Modifier.height(12.dp))
             }
-            // 使用中字号可切换任务卡组件展示 urgent but not important 任务
-            items(
-                items = taskList1.chunked(2)
-            ) { row ->
+            items(taskViewModel.taskList1.chunked(2)) { row ->
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -532,6 +496,8 @@ fun UrgentNotImportantScreen(onBackToMain: () -> Unit, modifier: Modifier = Modi
                             title = task.title,
                             deadline = task.deadline,
                             description = task.description,
+                            isCompleted = task.isCompleted,
+                            onToggle = { taskViewModel.toggleTask(task) },
                             modifier = Modifier.weight(1f)
                         )
                     }
@@ -551,10 +517,7 @@ fun UrgentNotImportantScreen(onBackToMain: () -> Unit, modifier: Modifier = Modi
                 )
                 Spacer(modifier = Modifier.height(12.dp))
             }
-            // 同样使用中字号可切换任务卡组件展示第二组任务
-            items(
-                items = taskList2.chunked(2)
-            ) { row ->
+            items(taskViewModel.taskList2.chunked(2)) { row ->
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -564,6 +527,8 @@ fun UrgentNotImportantScreen(onBackToMain: () -> Unit, modifier: Modifier = Modi
                             title = task.title,
                             deadline = task.deadline,
                             description = task.description,
+                            isCompleted = task.isCompleted,
+                            onToggle = { taskViewModel.toggleTask(task) },
                             modifier = Modifier.weight(1f)
                         )
                     }
@@ -574,40 +539,11 @@ fun UrgentNotImportantScreen(onBackToMain: () -> Unit, modifier: Modifier = Modi
     }
 }
 
-@Composable
-fun TaskCard3(
-    title: String,
-    deadline: String,
-    description: String,
-    modifier: Modifier = Modifier,
-    onClick: (() -> Unit)? = null
-) {
-    Card(
-        modifier = modifier
-            .padding(vertical = 4.dp)
-            .clickable(enabled = onClick != null) { onClick?.invoke() },
-        shape = RoundedCornerShape(10.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
-    ) {
-        Column(
-            modifier = Modifier.padding(10.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.Start
-        ) {
-            Text(title, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color.Black)
-            Spacer(modifier = Modifier.height(3.dp))
-            Text(deadline, fontSize = 12.sp, color = Color.Gray)
-            Spacer(modifier = Modifier.height(3.dp))
-            Text(description, fontSize = 12.sp, color = Color.Black.copy(alpha = 0.8f))
-        }
-    }
-}
-
 // ------------------ Important Not Urgent 页面 ------------------
 
 @Composable
 fun ImportantNotUrgentScreen(onBackToMain: () -> Unit, modifier: Modifier = Modifier) {
+    val taskViewModel: TaskViewModel = viewModel()
     Scaffold(
         bottomBar = {
             Box(
@@ -647,15 +583,14 @@ fun ImportantNotUrgentScreen(onBackToMain: () -> Unit, modifier: Modifier = Modi
                 )
                 Spacer(modifier = Modifier.height(12.dp))
             }
-            // 这里使用中字号可切换任务卡组件展示 Important Not Urgent 任务
-            items(
-                items = listOf(
-                    Task("Complete Research Paper", "Due: Next Monday", "Focus on data analysis section."),
-                    Task("Prepare Group Presentation", "Team meeting at 3 PM", "Finalize slides and rehearse key points."),
-                    Task("Revise for Midterm", "Subjects: Math & Computer Science", "Cover core concepts and problem-solving techniques.")
+            items(taskViewModel.importantNotUrgentTasks) { task ->
+                ToggleableTaskCardMedium(
+                    title = task.title,
+                    deadline = task.deadline,
+                    description = task.description,
+                    isCompleted = task.isCompleted,
+                    onToggle = { taskViewModel.toggleTask(task) }
                 )
-            ) { task ->
-                ToggleableTaskCardMedium(task.title, task.deadline, task.description)
             }
             item {
                 Spacer(modifier = Modifier.height(16.dp))
@@ -670,16 +605,39 @@ fun ImportantNotUrgentScreen(onBackToMain: () -> Unit, modifier: Modifier = Modi
                 )
                 Spacer(modifier = Modifier.height(12.dp))
             }
-            // 同样使用中字号可切换任务卡组件展示第二组任务
-            items(
-                items = listOf(
-                    Task("Library Assistant Shift", "Today 2 PM - 6 PM", "Assist students and organize book sections."),
-                    Task("Coding Club Meeting", "Tomorrow at 5 PM", "Discuss app development strategies."),
-                    Task("Volunteer Event", "Saturday at 10 AM", "Help organize a charity fundraiser.")
+            items(taskViewModel.partTimeSocialTasks) { task ->
+                ToggleableTaskCardMedium(
+                    title = task.title,
+                    deadline = task.deadline,
+                    description = task.description,
+                    isCompleted = task.isCompleted,
+                    onToggle = { taskViewModel.toggleTask(task) }
                 )
-            ) { task ->
-                ToggleableTaskCardMedium(task.title, task.deadline, task.description)
             }
+        }
+    }
+}
+
+@Composable
+fun TaskCard(title: String, deadline: String, description: String) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White)
+    ) {
+        Column(
+            modifier = Modifier.padding(8.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.Start
+        ) {
+            Text(text = title, fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Color.Black)
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(text = deadline, fontSize = 12.sp, color = Color.Gray)
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(text = description, fontSize = 12.sp, color = Color.Black.copy(alpha = 0.8f))
         }
     }
 }

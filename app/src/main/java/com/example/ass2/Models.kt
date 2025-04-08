@@ -30,4 +30,3 @@ val taskList2 = listOf(
     Task("Dinner with Study Group", "Meet at 7 PM", "Discuss upcoming exam strategies and unwind with friends over dinner."),
     Task("Student Club Meeting", "Plan fundraising event", "Coordinate logistics for upcoming charity drive with fellow club members.")
 )
-
