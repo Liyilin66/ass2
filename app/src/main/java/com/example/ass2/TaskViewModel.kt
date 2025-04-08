@@ -94,4 +94,25 @@ class TaskViewModel : ViewModel() {
             }
         }
     }
+
+    // 删除任务：从所有列表中移除该任务
+    fun deleteTask(task: Task) {
+        _taskList1.remove(task)
+        _taskList2.remove(task)
+        _urgentImportantTasks.remove(task)
+        _workSocialTasks.remove(task)
+        _importantNotUrgentTasks.remove(task)
+        _partTimeSocialTasks.remove(task)
+    }
+
+    // 添加任务方法，根据页面不同调用
+    fun addUrgentImportantTask(task: Task) {
+        _urgentImportantTasks.add(task)
+    }
+    fun addUrgentNotImportantTask(task: Task) {
+        _taskList1.add(task)
+    }
+    fun addImportantNotUrgentTask(task: Task) {
+        _importantNotUrgentTasks.add(task)
+    }
 }
