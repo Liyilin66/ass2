@@ -51,11 +51,12 @@ fun StudyManagementScreen(
         modifier = modifier
             .fillMaxSize()
             .background(
+                // 新的鲜明渐变：从深紫到中紫再到亮紫
                 Brush.verticalGradient(
                     colors = listOf(
-                        Color(0xFF1A237E),
-                        Color(0xFF3F51B5),
-                        Color(0xFF7986CB)
+                        Color(0xFF512DA8), // Deep Purple
+                        Color(0xFF7E57C2), // Medium Purple
+                        Color(0xFFAB47BC)  // Vibrant Pink-Purple
                     )
                 )
             )
@@ -87,6 +88,7 @@ fun StudyManagementScreen(
     }
 }
 
+
 @Composable
 fun HeaderSection() {
     Column(
@@ -94,7 +96,7 @@ fun HeaderSection() {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            "Good morning! Ready to tackle Wednesday?",
+            "Good morning! Ready to tackle your tasks?",
             fontSize = 22.sp,
             color = Color.White,
             fontWeight = FontWeight.Bold
@@ -105,7 +107,6 @@ fun HeaderSection() {
         Text("🎯 Weekly study goal: 12/20 hrs", fontSize = 18.sp, color = Color.White)
     }
 }
-
 @Composable
 fun SectionTitle(title: String) {
     Text(
@@ -1086,4 +1087,3 @@ fun SignUpScreen(
         }
     }
 }
-
