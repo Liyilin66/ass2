@@ -614,7 +614,6 @@ fun ImportantNotUrgentScreen(onBackToMain: () -> Unit, modifier: Modifier = Modi
 
 @Composable
 fun StudyAndReviewContent(onBack: () -> Unit, taskViewModel: TaskViewModel = viewModel()) {
-    var currentFeature by remember { mutableStateOf("SUBJECT_REVIEW") }
     val scrollState = rememberScrollState()
 
     Box(
@@ -633,72 +632,25 @@ fun StudyAndReviewContent(onBack: () -> Unit, taskViewModel: TaskViewModel = vie
                 .padding(16.dp)
                 .padding(bottom = 80.dp)  // 增加额外的底部内边距
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Button(
-                    onClick = { currentFeature = "SUBJECT_REVIEW" },
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (currentFeature == "SUBJECT_REVIEW") Color.White else Color.Transparent
-                    )
-                ) {
-                    Text("Subject Review", color = if (currentFeature == "SUBJECT_REVIEW") Color.Black else Color.White)
-                }
-                Button(
-                    onClick = { currentFeature = "QUESTION_CARD" },
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (currentFeature == "QUESTION_CARD") Color.White else Color.Transparent
-                    )
-                ) {
-                    Text("Question Card", color = if (currentFeature == "QUESTION_CARD") Color.Black else Color.White)
-                }
-            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            when (currentFeature) {
-                "SUBJECT_REVIEW" -> {
-                    Column {
-                        Text(
-                            "Subject Review",
-                            style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White,
-                            fontSize = 24.sp,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        // 柱状图部分
-                        ExamScoreBarChart()
-                        Spacer(modifier = Modifier.height(16.dp))
-                        // 成绩分析部分
-                        ScoreAnalysisSection()
-                    }
-                }
-                "QUESTION_CARD" -> {
-                    Column {
-                        Text(
-                            "Question Card",
-                            style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White,
-                            fontSize = 24.sp,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(
-                            "No question content available yet. Please add later.",
-                            color = Color.White,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
-                }
+            Column {
+                Text(
+                    "Subject Review",
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    fontSize = 24.sp,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                // 柱状图部分
+                ExamScoreBarChart()
+                Spacer(modifier = Modifier.height(16.dp))
+                // 成绩分析部分
+                ScoreAnalysisSection()
             }
         }
 

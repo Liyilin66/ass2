@@ -17,6 +17,11 @@ data class PriorityTask(
     val onClick: (() -> Unit)?
 )
 
+data class QuestionCard(
+    val question: String,
+    val answer: String
+)
+
 val taskList1 = listOf(
     Task("Check Professor Emails", "Reply to pending questions", "Respond to emails regarding upcoming assignment clarifications and project deadlines."),
     Task("Organize Study Notes", "Sort last week's lecture notes", "Highlight key points and group materials by topic for efficient review."),
