@@ -7,6 +7,8 @@ import androidx.compose.ui.Modifier
 import com.example.ass2.Screens.*
 
 enum class AppScreen {
+    LOGIN, // 新增登录页面
+    SIGN_UP, // 新增注册页面
     MAIN,
     URGENT,
     NOT_URGENT,
@@ -16,9 +18,20 @@ enum class AppScreen {
 
 @Composable
 fun AppNavigation() {
-    var currentScreen by remember { mutableStateOf(AppScreen.MAIN) }
+    var currentScreen by remember { mutableStateOf(AppScreen.LOGIN) } // 默认启动登录页面
     Surface(modifier = Modifier.fillMaxSize()) {
         when (currentScreen) {
+            AppScreen.LOGIN -> {
+                LoginScreen(
+                    onNavigateToSignUp = { currentScreen = AppScreen.SIGN_UP },
+                    onLoginSuccess = { currentScreen = AppScreen.MAIN }
+                )
+            }
+            AppScreen.SIGN_UP -> {
+                SignUpScreen(
+                    onBackToLogin = { currentScreen = AppScreen.LOGIN }
+                )
+            }
             AppScreen.MAIN -> {
                 StudyManagementScreen(
                     onNavigateToUrgent = { currentScreen = AppScreen.URGENT },

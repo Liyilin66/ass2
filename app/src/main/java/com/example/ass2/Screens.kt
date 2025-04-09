@@ -35,6 +35,7 @@ import com.example.ass2.Models.PriorityTask
 import com.example.ass2.TaskViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.unit.toSize
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 
 // ------------------ Main Screen and Sub-components ------------------
 
@@ -63,7 +64,7 @@ fun StudyManagementScreen(
     ) {
         item {
             Text(
-                "📚 Lisa's Study & Time Manager",
+                "📚 Study & Time Manager",
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
                 color = Color.White,
@@ -93,7 +94,7 @@ fun HeaderSection() {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            "Good morning, Lisa! Ready to tackle Wednesday?",
+            "Good morning! Ready to tackle Wednesday?",
             fontSize = 22.sp,
             color = Color.White,
             fontWeight = FontWeight.Bold
@@ -858,6 +859,229 @@ fun ExamScoreBarChart(
                 leftMargin - 8,
                 size.height - bottomMargin,
                 tickPaint
+            )
+        }
+    }
+}
+
+// ------------------ Login Screen ------------------
+@Composable
+fun LoginScreen(
+    onNavigateToSignUp: () -> Unit,
+    onLoginSuccess: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val taskViewModel: TaskViewModel = viewModel()
+    var username by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var errorMessage by remember { mutableStateOf("") }
+
+    // 使用渐变背景，色彩鲜明
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(Color(0xFF3F51B5), Color(0xFFE91E63))
+                )
+            )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            // 添加主题标题，突出页面用途
+            Text(
+                text = "Study & Time Manager",
+                style = MaterialTheme.typography.headlineLarge,
+                fontWeight = FontWeight.Bold,
+                color = Color.White,
+                textAlign = TextAlign.Center
+            )
+            Spacer(modifier = Modifier.height(24.dp))
+            Text(
+                text = "Login",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            OutlinedTextField(
+                value = username,
+                onValueChange = { username = it },
+                label = { Text("Username", color = Color.White) },
+                modifier = Modifier.fillMaxWidth(),
+                colors = TextFieldDefaults.outlinedTextFieldColors(
+                    focusedBorderColor = Color.Yellow,
+                    cursorColor = Color.Yellow,
+                    textColor = Color.White,
+                    unfocusedBorderColor = Color.White
+                )
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            OutlinedTextField(
+                value = password,
+                onValueChange = { password = it },
+                label = { Text("Password", color = Color.White) },
+                modifier = Modifier.fillMaxWidth(),
+                visualTransformation = PasswordVisualTransformation(),
+                colors = TextFieldDefaults.outlinedTextFieldColors(
+                    focusedBorderColor = Color.Yellow,
+                    cursorColor = Color.Yellow,
+                    textColor = Color.White,
+                    unfocusedBorderColor = Color.White
+                )
+            )
+            if (errorMessage.isNotEmpty()) {
+                Text(
+                    text = errorMessage,
+                    color = Color.Red,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            Button(
+                onClick = {
+                    if (taskViewModel.login(username, password)) {
+                        onLoginSuccess()
+                    } else {
+                        errorMessage = "Invalid username or password"
+                    }
+                },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Yellow
+                )
+            ) {
+                Text("Login", color = Color.Black)
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "Don't have an account? Sign Up",
+                color = Color.Cyan,
+                modifier = Modifier.clickable { onNavigateToSignUp() }
+            )
+        }
+    }
+}
+
+
+// ------------------ Sign Up Screen ------------------
+@Composable
+fun SignUpScreen(
+    onBackToLogin: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val taskViewModel: TaskViewModel = viewModel()
+    var username by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var confirmPassword by remember { mutableStateOf("") }
+    var errorMessage by remember { mutableStateOf("") }
+
+    // 使用鲜明的渐变背景
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(Color(0xFF3F51B5), Color(0xFFE91E63))
+                )
+            )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            // 主题标题
+            Text(
+                text = "Study & Time Manager",
+                style = MaterialTheme.typography.headlineLarge,
+                fontWeight = FontWeight.Bold,
+                color = Color.White,
+                textAlign = TextAlign.Center
+            )
+            Spacer(modifier = Modifier.height(24.dp))
+            Text(
+                text = "Sign Up",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            OutlinedTextField(
+                value = username,
+                onValueChange = { username = it },
+                label = { Text("Username", color = Color.White) },
+                modifier = Modifier.fillMaxWidth(),
+                colors = TextFieldDefaults.outlinedTextFieldColors(
+                    focusedBorderColor = Color.Yellow,
+                    cursorColor = Color.Yellow,
+                    textColor = Color.White,
+                    unfocusedBorderColor = Color.White
+                )
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            OutlinedTextField(
+                value = password,
+                onValueChange = { password = it },
+                label = { Text("Password", color = Color.White) },
+                modifier = Modifier.fillMaxWidth(),
+                visualTransformation = PasswordVisualTransformation(),
+                colors = TextFieldDefaults.outlinedTextFieldColors(
+                    focusedBorderColor = Color.Yellow,
+                    cursorColor = Color.Yellow,
+                    textColor = Color.White,
+                    unfocusedBorderColor = Color.White
+                )
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            OutlinedTextField(
+                value = confirmPassword,
+                onValueChange = { confirmPassword = it },
+                label = { Text("Confirm Password", color = Color.White) },
+                modifier = Modifier.fillMaxWidth(),
+                visualTransformation = PasswordVisualTransformation(),
+                colors = TextFieldDefaults.outlinedTextFieldColors(
+                    focusedBorderColor = Color.Yellow,
+                    cursorColor = Color.Yellow,
+                    textColor = Color.White,
+                    unfocusedBorderColor = Color.White
+                )
+            )
+            if (errorMessage.isNotEmpty()) {
+                Text(
+                    text = errorMessage,
+                    color = Color.Red,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            Button(
+                onClick = {
+                    if (password == confirmPassword && taskViewModel.signUp(username, password)) {
+                        onBackToLogin()
+                    } else {
+                        errorMessage = "Passwords do not match or username already exists"
+                    }
+                },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Yellow
+                )
+            ) {
+                Text("Sign Up", color = Color.Black)
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "Back to Login",
+                color = Color.Cyan,
+                modifier = Modifier.clickable { onBackToLogin() }
             )
         }
     }

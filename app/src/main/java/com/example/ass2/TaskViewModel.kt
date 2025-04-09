@@ -61,6 +61,19 @@ class TaskViewModel : ViewModel() {
         )
     }
 
+    private val _users = mutableStateListOf<Pair<String, String>>() // 存储用户名和密码
+
+    fun login(username: String, password: String): Boolean {
+        // 修改为检查用户名和密码是否非空
+        return username.isNotEmpty() && password.isNotEmpty()
+    }
+
+    fun signUp(username: String, password: String): Boolean {
+        if (_users.any { it.first == username }) return false // 用户名已存在
+        _users.add(Pair(username, password))
+        return true
+    }
+
     val taskList1: List<Task> = _taskList1
     val taskList2: List<Task> = _taskList2
     val urgentImportantTasks: List<Task> = _urgentImportantTasks
