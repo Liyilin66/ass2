@@ -10,7 +10,8 @@ enum class AppScreen {
     MAIN,
     URGENT,
     NOT_URGENT,
-    IMPORTANT
+    IMPORTANT,
+    STUDY_REVIEW
 }
 
 @Composable
@@ -22,7 +23,8 @@ fun AppNavigation() {
                 StudyManagementScreen(
                     onNavigateToUrgent = { currentScreen = AppScreen.URGENT },
                     onNavigateToNotUrgent = { currentScreen = AppScreen.NOT_URGENT },
-                    onNavigateToImportant = { currentScreen = AppScreen.IMPORTANT }
+                    onNavigateToImportant = { currentScreen = AppScreen.IMPORTANT },
+                    onNavigateToStudyAndReview = { currentScreen = AppScreen.STUDY_REVIEW }
                 )
             }
             AppScreen.URGENT -> {
@@ -33,6 +35,9 @@ fun AppNavigation() {
             }
             AppScreen.IMPORTANT -> {
                 ImportantNotUrgentScreen(onBackToMain = { currentScreen = AppScreen.MAIN })
+            }
+            AppScreen.STUDY_REVIEW -> {
+                StudyAndReviewContent(onBack = { currentScreen = AppScreen.MAIN })
             }
         }
     }

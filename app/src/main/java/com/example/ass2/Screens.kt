@@ -2,6 +2,10 @@
 
 package com.example.ass2.Screens
 
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -19,6 +23,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -27,14 +34,16 @@ import com.example.ass2.Models.Task
 import com.example.ass2.Models.PriorityTask
 import com.example.ass2.TaskViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.ui.unit.toSize
 
-// ------------------ 主页面与子组件 ------------------
+// ------------------ Main Screen and Sub-components ------------------
 
 @Composable
 fun StudyManagementScreen(
     onNavigateToUrgent: () -> Unit,
     onNavigateToNotUrgent: () -> Unit,
     onNavigateToImportant: () -> Unit,
+    onNavigateToStudyAndReview: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -70,42 +79,10 @@ fun StudyManagementScreen(
             PriorityMatrix(
                 onNavigateToUrgent = onNavigateToUrgent,
                 onNavigateToNotUrgent = onNavigateToNotUrgent,
-                onNavigateToImportant = onNavigateToImportant
+                onNavigateToImportant = onNavigateToImportant,
+                onNavigateToStudyAndReview = onNavigateToStudyAndReview
             )
         }
-        item { Spacer(modifier = Modifier.height(14.dp)) }
-        item { SectionTitle("⏳ Daily Schedule") }
-        item {
-            StudyTaskCard(
-                title = "🟦 Classes",
-                subtitle = "📖 Lecture sessions",
-                description = "🕒 9:00 AM - 12:00 PM",
-                backgroundBrush = Brush.horizontalGradient(
-                    colors = listOf(Color(0xFF1976D2), Color(0xFF64B5F6))
-                )
-            )
-        }
-        item {
-            StudyTaskCard(
-                title = "🟧 Work Shifts",
-                subtitle = "💼 Part-time job",
-                description = "🕒 2:00 PM - 5:00 PM",
-                backgroundBrush = Brush.horizontalGradient(
-                    colors = listOf(Color(0xFFD84315), Color(0xFFFF7043))
-                )
-            )
-        }
-        item {
-            StudyTaskCard(
-                title = "🟪 Study Sessions",
-                subtitle = "📚 Focused study time",
-                description = "🕒 6:00 PM - 8:00 PM",
-                backgroundBrush = Brush.horizontalGradient(
-                    colors = listOf(Color(0xFF8E24AA), Color(0xFFBA68C8))
-                )
-            )
-        }
-        // 此处可以继续添加主页面其他内容或导航入口
     }
 }
 
@@ -143,7 +120,8 @@ fun SectionTitle(title: String) {
 fun PriorityMatrix(
     onNavigateToUrgent: () -> Unit,
     onNavigateToNotUrgent: () -> Unit,
-    onNavigateToImportant: () -> Unit
+    onNavigateToImportant: () -> Unit,
+    onNavigateToStudyAndReview: () -> Unit
 ) {
     val priorityTasks = listOf(
         PriorityTask(
@@ -180,27 +158,21 @@ fun PriorityMatrix(
             backgroundBrush = Brush.horizontalGradient(
                 colors = listOf(Color(0xFF757575), Color(0xFFE0E0E0))
             ),
-            onClick = null
+            onClick = onNavigateToStudyAndReview
         )
     )
     Column {
-        priorityTasks.chunked(2).forEach { rowTasks ->
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                rowTasks.forEach { task ->
-                    StudyTaskCard(
-                        title = task.title,
-                        subtitle = task.subtitle,
-                        description = task.description,
-                        backgroundBrush = task.backgroundBrush,
-                        onClick = task.onClick,
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-            }
-            Spacer(modifier = Modifier.height(8.dp))
+        priorityTasks.forEach { task ->
+            StudyTaskCard(
+                title = task.title,
+                subtitle = task.subtitle,
+                description = task.description,
+                backgroundBrush = task.backgroundBrush,
+                onClick = task.onClick,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp)
+            )
         }
     }
 }
@@ -243,7 +215,7 @@ fun StudyTaskCard(
     }
 }
 
-// ------------------ 修改后的任务卡组件 ------------------
+// ------------------ Toggleable Task Card Components ------------------
 
 @Composable
 fun ToggleableTaskCardLarge(
@@ -325,8 +297,7 @@ fun ToggleableTaskCardMedium(
     }
 }
 
-// ------------------ Urgent & Important 页面 ------------------
-// 样式与 Urgent but Not Important 和 Important Not Urgent 页面一致：不使用 TopAppBar，而在内容顶部显示标题
+// ------------------ Urgent & Important Screen ------------------
 
 @Composable
 fun UrgentAndImportantScreen(onBackToMain: () -> Unit, modifier: Modifier = Modifier) {
@@ -425,8 +396,7 @@ fun UrgentAndImportantScreen(onBackToMain: () -> Unit, modifier: Modifier = Modi
     }
 }
 
-// ------------------ Urgent but Not Important 页面 ------------------
-// 移除 TopAppBar，直接在内容顶部显示标题，并同时显示 taskList1 与 taskList2 两部分
+// ------------------ Urgent but Not Important Screen ------------------
 
 @Composable
 fun UrgentNotImportantScreen(onBackToMain: () -> Unit, modifier: Modifier = Modifier) {
@@ -475,7 +445,6 @@ fun UrgentNotImportantScreen(onBackToMain: () -> Unit, modifier: Modifier = Modi
                 .padding(paddingValues)
                 .padding(horizontal = 12.dp, vertical = 16.dp)
         ) {
-            // 第一部分：taskList1
             item {
                 Text(
                     "🔵 Urgent but Not Important Tasks",
@@ -507,7 +476,6 @@ fun UrgentNotImportantScreen(onBackToMain: () -> Unit, modifier: Modifier = Modi
                 }
                 Spacer(modifier = Modifier.height(6.dp))
             }
-            // 第二部分：taskList2 显示 Part-Time Job & Social Commitments
             item {
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
@@ -544,8 +512,7 @@ fun UrgentNotImportantScreen(onBackToMain: () -> Unit, modifier: Modifier = Modi
     }
 }
 
-// ------------------ Important Not Urgent 页面 ------------------
-// 移除 TopAppBar，直接在内容顶部显示标题
+// ------------------ Important Not Urgent Screen ------------------
 
 @Composable
 fun ImportantNotUrgentScreen(onBackToMain: () -> Unit, modifier: Modifier = Modifier) {
@@ -643,121 +610,304 @@ fun ImportantNotUrgentScreen(onBackToMain: () -> Unit, modifier: Modifier = Modi
     }
 }
 
-// ------------------ 新设计：Study & Review 页面（内嵌到主页面或独立使用均可） ------------------
+// ------------------ Study & Review Page (Changed to "各科考试成绩分析") ------------------
 
 @Composable
-fun StudyAndReviewContent() {
-    Text(
-        text = "⚪ Study & Review",
-        style = MaterialTheme.typography.headlineMedium,
-        fontWeight = FontWeight.Bold,
-        color = Color.White,
-        fontSize = 28.sp,
-        textAlign = TextAlign.Center,
+fun StudyAndReviewContent(onBack: () -> Unit, taskViewModel: TaskViewModel = viewModel()) {
+    var currentFeature by remember { mutableStateOf("SUBJECT_REVIEW") }
+    val scrollState = rememberScrollState()
+
+    Box(
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp)
-    )
-    var selectedTab by remember { mutableStateOf(0) }
-    val tabs = listOf("Topics", "Flashcards")
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp)
+            .fillMaxSize()
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(Color(0xFF7986CB), Color(0xFF3F51B5))
+                )
+            )
     ) {
-        TabRow(selectedTabIndex = selectedTab) {
-            tabs.forEachIndexed { index, title ->
-                Tab(
-                    text = { Text(title) },
-                    selected = selectedTab == index,
-                    onClick = { selectedTab = index }
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(scrollState)
+                .padding(16.dp)
+                .padding(bottom = 80.dp)  // 增加额外的底部内边距
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Button(
+                    onClick = { currentFeature = "SUBJECT_REVIEW" },
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (currentFeature == "SUBJECT_REVIEW") Color.White else Color.Transparent
+                    )
+                ) {
+                    Text("Subject Review", color = if (currentFeature == "SUBJECT_REVIEW") Color.Black else Color.White)
+                }
+                Button(
+                    onClick = { currentFeature = "QUESTION_CARD" },
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (currentFeature == "QUESTION_CARD") Color.White else Color.Transparent
+                    )
+                ) {
+                    Text("Question Card", color = if (currentFeature == "QUESTION_CARD") Color.Black else Color.White)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            when (currentFeature) {
+                "SUBJECT_REVIEW" -> {
+                    Column {
+                        Text(
+                            "Subject Review",
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White,
+                            fontSize = 24.sp,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        // 柱状图部分
+                        ExamScoreBarChart()
+                        Spacer(modifier = Modifier.height(16.dp))
+                        // 成绩分析部分
+                        ScoreAnalysisSection()
+                    }
+                }
+                "QUESTION_CARD" -> {
+                    Column {
+                        Text(
+                            "Question Card",
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White,
+                            fontSize = 24.sp,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            "No question content available yet. Please add later.",
+                            color = Color.White,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
+            }
+        }
+
+        Button(
+            onClick = onBack,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .padding(16.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color.White)
+        ) {
+            Text("Back to Main", color = Color.Black, fontSize = 12.sp)
+        }
+    }
+}
+
+
+@Composable
+fun ScoreAnalysisCard(
+    subject: String,
+    score: Int,
+    modifier: Modifier = Modifier
+) {
+    // 根据分数生成评语
+    val feedback = when {
+        score >= 90 -> "Excellent performance! You've mastered this subject. Keep up the fantastic work!"
+        score in 80..89 -> "Good job overall! Your understanding is solid, but consider focusing on refining problem solving skills."
+        else -> "Needs improvement. Your fundamentals could be stronger; review core concepts and practice more."
+    }
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp, horizontal = 8.dp),
+        shape = RoundedCornerShape(8.dp),
+        // 设置背景色为白色
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = subject,
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+                color = Color.Black
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "Score: $score",
+                style = MaterialTheme.typography.bodyLarge,
+                color = Color.Black
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = feedback,
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.DarkGray
+            )
+        }
+    }
+}
+
+
+
+@Composable
+fun ScoreAnalysisSection(
+    scores: Map<String, Int> = mapOf(
+        "Math" to 78,
+        "English" to 85,
+        "Physics" to 90,
+        "Chemistry" to 88,
+        "Biology" to 82
+    )
+) {
+    Column(modifier = Modifier.padding(16.dp)) {
+        Text(
+            text = "Score Analysis",
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold,
+            color = Color.Black
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        scores.forEach { (subject, score) ->
+            ScoreAnalysisCard(subject = subject, score = score)
+        }
+    }
+}
+
+
+// ------------------ ExamScoreBarChart Component ------------------
+
+@Composable
+fun ExamScoreBarChart(
+    modifier: Modifier = Modifier,
+    scores: Map<String, Int> = mapOf(
+        "Math" to 78,
+        "English" to 85,
+        "Physics" to 90,
+        "Chemistry" to 88,
+        "Biology" to 82
+    )
+) {
+    Canvas(modifier = modifier
+        .fillMaxWidth()
+        .height(250.dp)
+    ) {
+        val leftMargin = 40.dp.toPx()
+        val rightMargin = 16.dp.toPx()
+        val topMargin = 16.dp.toPx()
+        val bottomMargin = 60.dp.toPx()
+
+        val chartWidth = size.width - leftMargin - rightMargin
+        val chartHeight = size.height - topMargin - bottomMargin
+
+        // Draw Y axis with arrowhead
+        drawLine(
+            color = Color.Black,
+            start = Offset(leftMargin, topMargin),
+            end = Offset(leftMargin, size.height - bottomMargin),
+            strokeWidth = 4f
+        )
+        val arrowSize = 8.dp.toPx()
+        val yArrowPath = androidx.compose.ui.graphics.Path().apply {
+            moveTo(leftMargin, topMargin)
+            lineTo(leftMargin - arrowSize, topMargin + arrowSize)
+            lineTo(leftMargin + arrowSize, topMargin + arrowSize)
+            close()
+        }
+        drawPath(path = yArrowPath, color = Color.Black)
+
+        // Draw X axis with arrowhead
+        drawLine(
+            color = Color.Black,
+            start = Offset(leftMargin, size.height - bottomMargin),
+            end = Offset(size.width - rightMargin, size.height - bottomMargin),
+            strokeWidth = 4f
+        )
+        val xArrowPath = androidx.compose.ui.graphics.Path().apply {
+            moveTo(size.width - rightMargin, size.height - bottomMargin)
+            lineTo(size.width - rightMargin - arrowSize, size.height - bottomMargin - arrowSize / 2)
+            lineTo(size.width - rightMargin - arrowSize, size.height - bottomMargin + arrowSize / 2)
+            close()
+        }
+        drawPath(path = xArrowPath, color = Color.Black)
+
+        // Draw bars for each subject
+        val numberOfBars = scores.size
+        val spacing = 16.dp.toPx()
+        val barWidth = (chartWidth - (numberOfBars + 1) * spacing) / numberOfBars
+        val maxScore = scores.values.maxOrNull()?.toFloat() ?: 100f
+
+        val entries = scores.entries.toList()
+        entries.forEachIndexed { index, entry ->
+            val x = leftMargin + spacing * (index + 1) + barWidth * index
+            val barHeight = (entry.value / maxScore) * chartHeight
+            val y = size.height - bottomMargin - barHeight
+
+            drawRect(
+                color = Color.Cyan,
+                topLeft = Offset(x, y),
+                size = Size(barWidth, barHeight)
+            )
+
+            drawIntoCanvas { canvas ->
+                val paint = android.graphics.Paint().apply {
+                    color = android.graphics.Color.BLACK
+                    textSize = 40f
+                    textAlign = android.graphics.Paint.Align.CENTER
+                }
+                canvas.nativeCanvas.drawText(
+                    entry.key,
+                    x + barWidth / 2,
+                    size.height - bottomMargin / 2,
+                    paint
+                )
+                canvas.nativeCanvas.drawText(
+                    entry.value.toString(),
+                    x + barWidth / 2,
+                    y - 10f,
+                    paint
                 )
             }
         }
-        when (selectedTab) {
-            0 -> StudyTopicsTab()
-            1 -> FlashcardsTab()
-        }
-    }
-}
 
-@Composable
-fun StudyTopicsTab() {
-    var searchQuery by remember { mutableStateOf("") }
-    val reviewTopics = listOf("Mathematics", "Computer Science", "History", "Physics", "Chemistry")
-    val filteredTopics = if (searchQuery.isEmpty()) reviewTopics
-    else reviewTopics.filter { it.contains(searchQuery, ignoreCase = true) }
-    Column(modifier = Modifier.padding(top = 16.dp)) {
-        OutlinedTextField(
-            value = searchQuery,
-            onValueChange = { searchQuery = it },
-            label = { Text("Search Topics") },
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-        LazyColumn {
-            items(filteredTopics) { topic ->
-                ReviewTopicCard(topic = topic, onClick = { /* 处理点击事件 */ })
+        // Draw Y-axis tick labels
+        drawIntoCanvas { canvas ->
+            val tickPaint = android.graphics.Paint().apply {
+                color = android.graphics.Color.BLACK
+                textSize = 40f
+                textAlign = android.graphics.Paint.Align.RIGHT
             }
+            canvas.nativeCanvas.drawText(
+                maxScore.toInt().toString(),
+                leftMargin - 8,
+                topMargin + 40f,
+                tickPaint
+            )
+            canvas.nativeCanvas.drawText(
+                (maxScore / 2).toInt().toString(),
+                leftMargin - 8,
+                topMargin + chartHeight / 2 + 40f,
+                tickPaint
+            )
+            canvas.nativeCanvas.drawText(
+                "0",
+                leftMargin - 8,
+                size.height - bottomMargin,
+                tickPaint
+            )
         }
     }
 }
 
-@Composable
-fun ReviewTopicCard(topic: String, onClick: () -> Unit) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp)
-            .clickable { onClick() },
-        shape = RoundedCornerShape(8.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
-    ) {
-        Text(
-            text = topic,
-            modifier = Modifier.padding(16.dp),
-            fontWeight = FontWeight.Bold
-        )
-    }
-}
-
-@Composable
-fun FlashcardsTab() {
-    val flashcards = listOf(
-        "What is the capital of France?" to "Paris",
-        "What is 2+2?" to "4",
-        "What is the powerhouse of the cell?" to "Mitochondria"
-    )
-    Column(modifier = Modifier.padding(top = 16.dp)) {
-        LazyColumn {
-            items(flashcards) { card ->
-                Flashcard(question = card.first, answer = card.second, onClick = { /* 处理点击事件 */ })
-            }
-        }
-    }
-}
-
-@Composable
-fun Flashcard(question: String, answer: String, onClick: () -> Unit) {
-    var showAnswer by remember { mutableStateOf(false) }
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 6.dp)
-            .clickable { onClick() },
-        shape = RoundedCornerShape(8.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            if (showAnswer) {
-                Text(text = "Answer:", fontWeight = FontWeight.Bold, color = Color.Blue)
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(text = answer)
-            } else {
-                Text(text = "Question:", fontWeight = FontWeight.Bold, color = Color.Blue)
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(text = question)
-            }
-        }
-    }
-}

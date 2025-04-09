@@ -6,47 +6,59 @@ import com.example.ass2.Models.Task
 
 class TaskViewModel : ViewModel() {
     private val _taskList1 = mutableStateListOf<Task>().apply {
-        addAll(listOf(
-            Task("Check Professor Emails", "Reply to pending questions", "Respond to emails regarding upcoming assignment clarifications and project deadlines.", isCompleted = false),
-            Task("Organize Study Notes", "Sort last week's lecture notes", "Highlight key points and group materials by topic for efficient review.", isCompleted = false),
-            Task("Update University Portal", "Confirm class schedules", "Check for updates on classroom changes and upcoming assessments.", isCompleted = false),
-            Task("Review Presentation Slides", "Practice for seminar", "Prepare key talking points and refine visual content for upcoming seminar.", isCompleted = false)
-        ))
+        addAll(
+            listOf(
+                Task("Check Professor Emails", "Reply to pending questions", "Respond to emails regarding upcoming assignment clarifications and project deadlines.", isCompleted = false),
+                Task("Organize Study Notes", "Sort last week's lecture notes", "Highlight key points and group materials by topic for efficient review.", isCompleted = false),
+                Task("Update University Portal", "Confirm class schedules", "Check for updates on classroom changes and upcoming assessments.", isCompleted = false),
+                Task("Review Presentation Slides", "Practice for seminar", "Prepare key talking points and refine visual content for upcoming seminar.", isCompleted = false)
+            )
+        )
     }
     private val _taskList2 = mutableStateListOf<Task>().apply {
-        addAll(listOf(
-            Task("Library Shift", "Work from 2 PM - 6 PM", "Assist students in finding books, manage check-ins, and maintain quiet study zones.", isCompleted = false),
-            Task("Tutoring Session", "Help classmates with calculus", "Guide students through problem-solving techniques for upcoming test preparation.", isCompleted = false),
-            Task("Dinner with Study Group", "Meet at 7 PM", "Discuss upcoming exam strategies and unwind with friends over dinner.", isCompleted = false),
-            Task("Student Club Meeting", "Plan fundraising event", "Coordinate logistics for upcoming charity drive with fellow club members.", isCompleted = false)
-        ))
+        addAll(
+            listOf(
+                Task("Library Shift", "Work from 2 PM - 6 PM", "Assist students in finding books, manage check-ins, and maintain quiet study zones.", isCompleted = false),
+                Task("Tutoring Session", "Help classmates with calculus", "Guide students through problem-solving techniques for upcoming test preparation.", isCompleted = false),
+                Task("Dinner with Study Group", "Meet at 7 PM", "Discuss upcoming exam strategies and unwind with friends over dinner.", isCompleted = false),
+                Task("Student Club Meeting", "Plan fundraising event", "Coordinate logistics for upcoming charity drive with fellow club members.", isCompleted = false)
+            )
+        )
     }
     private val _urgentImportantTasks = mutableStateListOf<Task>().apply {
-        addAll(listOf(
-            Task("Complete Assignment", "Due today at 11:59 PM", "Ensure all sections are well written and formatted.", isCompleted = false),
-            Task("Prepare for Exam", "Review notes and practice questions", "Allocate at least 3 hours to revise core concepts.", isCompleted = false),
-            Task("Project Deadline", "Submit group project by 5 PM", "Review final document and confirm all contributions.", isCompleted = false)
-        ))
+        addAll(
+            listOf(
+                Task("Complete Assignment", "Due today at 11:59 PM", "Ensure all sections are well written and formatted.", isCompleted = false),
+                Task("Prepare for Exam", "Review notes and practice questions", "Allocate at least 3 hours to revise core concepts.", isCompleted = false),
+                Task("Project Deadline", "Submit group project by 5 PM", "Review final document and confirm all contributions.", isCompleted = false)
+            )
+        )
     }
     private val _workSocialTasks = mutableStateListOf<Task>().apply {
-        addAll(listOf(
-            Task("Part-time Job Shift", "Today from 4 PM - 8 PM", "Assist customers and manage store inventory.", isCompleted = false),
-            Task("Dinner with Friends", "Tonight at 7:30 PM", "Catch up and enjoy quality time at the cafe.", isCompleted = false)
-        ))
+        addAll(
+            listOf(
+                Task("Part-time Job Shift", "Today from 4 PM - 8 PM", "Assist customers and manage store inventory.", isCompleted = false),
+                Task("Dinner with Friends", "Tonight at 7:30 PM", "Catch up and enjoy quality time at the cafe.", isCompleted = false)
+            )
+        )
     }
     private val _importantNotUrgentTasks = mutableStateListOf<Task>().apply {
-        addAll(listOf(
-            Task("Complete Research Paper", "Due: Next Monday", "Focus on data analysis section.", isCompleted = false),
-            Task("Prepare Group Presentation", "Team meeting at 3 PM", "Finalize slides and rehearse key points.", isCompleted = false),
-            Task("Revise for Midterm", "Subjects: Math & Computer Science", "Cover core concepts and problem-solving techniques.", isCompleted = false)
-        ))
+        addAll(
+            listOf(
+                Task("Complete Research Paper", "Due: Next Monday", "Focus on data analysis section.", isCompleted = false),
+                Task("Prepare Group Presentation", "Team meeting at 3 PM", "Finalize slides and rehearse key points.", isCompleted = false),
+                Task("Revise for Midterm", "Subjects: Math & Computer Science", "Cover core concepts and problem-solving techniques.", isCompleted = false)
+            )
+        )
     }
     private val _partTimeSocialTasks = mutableStateListOf<Task>().apply {
-        addAll(listOf(
-            Task("Library Assistant Shift", "Today 2 PM - 6 PM", "Assist students and organize book sections.", isCompleted = false),
-            Task("Coding Club Meeting", "Tomorrow at 5 PM", "Discuss app development strategies.", isCompleted = false),
-            Task("Volunteer Event", "Saturday at 10 AM", "Help organize a charity fundraiser.", isCompleted = false)
-        ))
+        addAll(
+            listOf(
+                Task("Library Assistant Shift", "Today 2 PM - 6 PM", "Assist students and organize book sections.", isCompleted = false),
+                Task("Coding Club Meeting", "Tomorrow at 5 PM", "Discuss app development strategies.", isCompleted = false),
+                Task("Volunteer Event", "Saturday at 10 AM", "Help organize a charity fundraiser.", isCompleted = false)
+            )
+        )
     }
 
     val taskList1: List<Task> = _taskList1
@@ -95,7 +107,6 @@ class TaskViewModel : ViewModel() {
         }
     }
 
-    // 删除任务：从所有列表中移除该任务
     fun deleteTask(task: Task) {
         _taskList1.remove(task)
         _taskList2.remove(task)
@@ -105,7 +116,6 @@ class TaskViewModel : ViewModel() {
         _partTimeSocialTasks.remove(task)
     }
 
-    // 添加任务方法，根据页面不同调用
     fun addUrgentImportantTask(task: Task) {
         _urgentImportantTasks.add(task)
     }
