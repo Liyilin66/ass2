@@ -2,42 +2,47 @@
 
 package com.example.ass2.Screens
 
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccessTime
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.ass2.Models.Task
-import com.example.ass2.Models.PriorityTask
-import com.example.ass2.TaskViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.compose.ui.unit.toSize
-import androidx.compose.ui.text.input.PasswordVisualTransformation
+import com.example.ass2.Models.PriorityTask
+import com.example.ass2.ViewModel.TaskViewModel
+import com.example.ass2.data.TaskEntity
+import com.example.ass2.data.TaskEntity2
 
-// ------------------ Main Screen and Sub-components ------------------
+// 分类前缀常量，用于区分不同任务类型
+private const val CATEGORY_URGENT_IMPORTANT = "Urgent & Important:"
+private const val CATEGORY_URGENT_NOT_IMPORTANT = "Urgent but Not Important:"
+private const val CATEGORY_IMPORTANT_NOT_URGENT = "Important Not Urgent:"
+private const val CATEGORY_STUDY_REVIEW = "Study & Review:"
+
+// ------------------ 主界面及子组件 ------------------
 
 @Composable
 fun StudyManagementScreen(
@@ -51,12 +56,11 @@ fun StudyManagementScreen(
         modifier = modifier
             .fillMaxSize()
             .background(
-                // 新的鲜明渐变：从深紫到中紫再到亮紫
                 Brush.verticalGradient(
                     colors = listOf(
-                        Color(0xFF512DA8), // Deep Purple
-                        Color(0xFF7E57C2), // Medium Purple
-                        Color(0xFFAB47BC)  // Vibrant Pink-Purple
+                        Color(0xFF512DA8),
+                        Color(0xFF7E57C2),
+                        Color(0xFFAB47BC)
                     )
                 )
             )
@@ -88,7 +92,6 @@ fun StudyManagementScreen(
     }
 }
 
-
 @Composable
 fun HeaderSection() {
     Column(
@@ -107,6 +110,7 @@ fun HeaderSection() {
         Text("🎯 Weekly study goal: 12/20 hrs", fontSize = 18.sp, color = Color.White)
     }
 }
+
 @Composable
 fun SectionTitle(title: String) {
     Text(
@@ -304,7 +308,11 @@ fun ToggleableTaskCardMedium(
 @Composable
 fun UrgentAndImportantScreen(onBackToMain: () -> Unit, modifier: Modifier = Modifier) {
     val taskViewModel: TaskViewModel = viewModel()
+    val allTasks by taskViewModel.taskList.collectAsState(initial = emptyList())
+    // 根据任务标题中是否包含“Urgent & Important:”前缀过滤
+    val tasks = allTasks.filter { it.title.startsWith(CATEGORY_URGENT_IMPORTANT) }
     var newTaskTitle by remember { mutableStateOf("") }
+
     Scaffold(
         bottomBar = {
             Column(modifier = Modifier.padding(16.dp)) {
@@ -318,7 +326,7 @@ fun UrgentAndImportantScreen(onBackToMain: () -> Unit, modifier: Modifier = Modi
                 Button(
                     onClick = {
                         if (newTaskTitle.isNotBlank()) {
-                            taskViewModel.addUrgentImportantTask(Task(newTaskTitle, "", "", false))
+                            taskViewModel.addTask("$CATEGORY_URGENT_IMPORTANT $newTaskTitle", "", "")
                             newTaskTitle = ""
                         }
                     },
@@ -360,32 +368,9 @@ fun UrgentAndImportantScreen(onBackToMain: () -> Unit, modifier: Modifier = Modi
                 )
                 Spacer(modifier = Modifier.height(12.dp))
             }
-            items(taskViewModel.urgentImportantTasks) { task ->
+            items(tasks) { task ->
                 ToggleableTaskCardLarge(
-                    title = task.title,
-                    deadline = task.deadline,
-                    description = task.description,
-                    isCompleted = task.isCompleted,
-                    onToggle = { taskViewModel.toggleTask(task) },
-                    onDelete = { taskViewModel.deleteTask(task) }
-                )
-            }
-            item {
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    "💼 Work & Social Commitments",
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White,
-                    fontSize = 16.sp,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-            }
-            items(taskViewModel.workSocialTasks) { task ->
-                ToggleableTaskCardLarge(
-                    title = task.title,
+                    title = task.title.removePrefix("$CATEGORY_URGENT_IMPORTANT "),
                     deadline = task.deadline,
                     description = task.description,
                     isCompleted = task.isCompleted,
@@ -403,7 +388,10 @@ fun UrgentAndImportantScreen(onBackToMain: () -> Unit, modifier: Modifier = Modi
 @Composable
 fun UrgentNotImportantScreen(onBackToMain: () -> Unit, modifier: Modifier = Modifier) {
     val taskViewModel: TaskViewModel = viewModel()
+    val allTasks by taskViewModel.taskList.collectAsState(initial = emptyList())
+    val tasks = allTasks.filter { it.title.startsWith(CATEGORY_URGENT_NOT_IMPORTANT) }
     var newTaskTitle by remember { mutableStateOf("") }
+
     Scaffold(
         bottomBar = {
             Column(modifier = Modifier.padding(16.dp)) {
@@ -417,7 +405,7 @@ fun UrgentNotImportantScreen(onBackToMain: () -> Unit, modifier: Modifier = Modi
                 Button(
                     onClick = {
                         if (newTaskTitle.isNotBlank()) {
-                            taskViewModel.addUrgentNotImportantTask(Task(newTaskTitle, "", "", false))
+                            taskViewModel.addTask("$CATEGORY_URGENT_NOT_IMPORTANT $newTaskTitle", "", "")
                             newTaskTitle = ""
                         }
                     },
@@ -459,57 +447,18 @@ fun UrgentNotImportantScreen(onBackToMain: () -> Unit, modifier: Modifier = Modi
                 )
                 Spacer(modifier = Modifier.height(12.dp))
             }
-            items(taskViewModel.taskList1.chunked(2)) { row ->
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    row.forEach { task ->
-                        ToggleableTaskCardMedium(
-                            title = task.title,
-                            deadline = task.deadline,
-                            description = task.description,
-                            isCompleted = task.isCompleted,
-                            onToggle = { taskViewModel.toggleTask(task) },
-                            onDelete = { taskViewModel.deleteTask(task) },
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                }
-                Spacer(modifier = Modifier.height(6.dp))
-            }
-            item {
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    "💼 Part-Time Job & Social Commitments",
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White,
-                    fontSize = 18.sp,
-                    textAlign = TextAlign.Center,
+            items(tasks) { task ->
+                ToggleableTaskCardMedium(
+                    title = task.title.removePrefix("$CATEGORY_URGENT_NOT_IMPORTANT "),
+                    deadline = task.deadline,
+                    description = task.description,
+                    isCompleted = task.isCompleted,
+                    onToggle = { taskViewModel.toggleTask(task) },
+                    onDelete = { taskViewModel.deleteTask(task) },
                     modifier = Modifier.fillMaxWidth()
                 )
-                Spacer(modifier = Modifier.height(12.dp))
             }
-            items(taskViewModel.taskList2.chunked(2)) { row ->
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    row.forEach { task ->
-                        ToggleableTaskCardMedium(
-                            title = task.title,
-                            deadline = task.deadline,
-                            description = task.description,
-                            isCompleted = task.isCompleted,
-                            onToggle = { taskViewModel.toggleTask(task) },
-                            onDelete = { taskViewModel.deleteTask(task) },
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                }
-                Spacer(modifier = Modifier.height(6.dp))
-            }
+            item { Spacer(modifier = Modifier.height(16.dp)) }
         }
     }
 }
@@ -519,7 +468,10 @@ fun UrgentNotImportantScreen(onBackToMain: () -> Unit, modifier: Modifier = Modi
 @Composable
 fun ImportantNotUrgentScreen(onBackToMain: () -> Unit, modifier: Modifier = Modifier) {
     val taskViewModel: TaskViewModel = viewModel()
+    val allTasks by taskViewModel.taskList.collectAsState(initial = emptyList())
+    val tasks = allTasks.filter { it.title.startsWith(CATEGORY_IMPORTANT_NOT_URGENT) }
     var newTaskTitle by remember { mutableStateOf("") }
+
     Scaffold(
         bottomBar = {
             Column(modifier = Modifier.padding(16.dp)) {
@@ -533,7 +485,7 @@ fun ImportantNotUrgentScreen(onBackToMain: () -> Unit, modifier: Modifier = Modi
                 Button(
                     onClick = {
                         if (newTaskTitle.isNotBlank()) {
-                            taskViewModel.addImportantNotUrgentTask(Task(newTaskTitle, "", "", false))
+                            taskViewModel.addTask("$CATEGORY_IMPORTANT_NOT_URGENT $newTaskTitle", "", "")
                             newTaskTitle = ""
                         }
                     },
@@ -575,32 +527,9 @@ fun ImportantNotUrgentScreen(onBackToMain: () -> Unit, modifier: Modifier = Modi
                 )
                 Spacer(modifier = Modifier.height(12.dp))
             }
-            items(taskViewModel.importantNotUrgentTasks) { task ->
+            items(tasks) { task ->
                 ToggleableTaskCardMedium(
-                    title = task.title,
-                    deadline = task.deadline,
-                    description = task.description,
-                    isCompleted = task.isCompleted,
-                    onToggle = { taskViewModel.toggleTask(task) },
-                    onDelete = { taskViewModel.deleteTask(task) }
-                )
-            }
-            item {
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    "💼 Part-Time Job & Social Activities",
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White,
-                    fontSize = 18.sp,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Spacer(modifier = Modifier.height(12.dp))
-            }
-            items(taskViewModel.partTimeSocialTasks) { task ->
-                ToggleableTaskCardMedium(
-                    title = task.title,
+                    title = task.title.removePrefix("$CATEGORY_IMPORTANT_NOT_URGENT "),
                     deadline = task.deadline,
                     description = task.description,
                     isCompleted = task.isCompleted,
@@ -612,10 +541,14 @@ fun ImportantNotUrgentScreen(onBackToMain: () -> Unit, modifier: Modifier = Modi
     }
 }
 
-// ------------------ Study & Review Page (Changed to "各科考试成绩分析") ------------------
+// ------------------ Study & Review Page ------------------
 
 @Composable
-fun StudyAndReviewContent(onBack: () -> Unit, taskViewModel: TaskViewModel = viewModel()) {
+fun StudyAndReviewContent(onBack: () -> Unit) {
+    // 使用 TaskViewModel（其中包含 Subject 相关的数据与方法）
+    val taskViewModel: TaskViewModel = viewModel()
+    // 获取科目及分数列表
+    val subjects by taskViewModel.subjectList.collectAsState(initial = emptyList())
     val scrollState = rememberScrollState()
 
     Box(
@@ -632,30 +565,36 @@ fun StudyAndReviewContent(onBack: () -> Unit, taskViewModel: TaskViewModel = vie
                 .fillMaxSize()
                 .verticalScroll(scrollState)
                 .padding(16.dp)
-                .padding(bottom = 80.dp)  // 增加额外的底部内边距
+                .padding(bottom = 80.dp)
         ) {
-
             Spacer(modifier = Modifier.height(16.dp))
-
-            Column {
-                Text(
-                    "Subject Review",
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White,
-                    fontSize = 24.sp,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                // 柱状图部分
-                ExamScoreBarChart()
-                Spacer(modifier = Modifier.height(16.dp))
-                // 成绩分析部分
-                ScoreAnalysisSection()
-            }
+            Text(
+                "Subject Review",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                color = Color.White,
+                fontSize = 24.sp,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            // 使用已有的 ExamScoreBarChart 展示图表（保持不变）
+            // 注意：如果图表数据需要和数据库同步，可自行调整代码
+            ExamScoreBarChart(
+                scores = subjects.associate { it.subject to it.score.toInt() }
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            // 修改后 ScoreAnalysisSection 传入完整的科目列表以及添加与删除回调
+            ScoreAnalysisSection(
+                subjects = subjects,
+                onDeleteSubject = { subjectEntity ->
+                    taskViewModel.deleteSubject(subjectEntity)
+                },
+                onAddSubject = { subject, score ->
+                    taskViewModel.addSubject(subject, score)
+                }
+            )
         }
-
         Button(
             onClick = onBack,
             modifier = Modifier
@@ -671,88 +610,9 @@ fun StudyAndReviewContent(onBack: () -> Unit, taskViewModel: TaskViewModel = vie
 
 
 @Composable
-fun ScoreAnalysisCard(
-    subject: String,
-    score: Int,
-    modifier: Modifier = Modifier
-) {
-    // 根据分数生成评语
-    val feedback = when {
-        score >= 90 -> "Excellent performance! You've mastered this subject. Keep up the fantastic work!"
-        score in 80..89 -> "Good job overall! Your understanding is solid, but consider focusing on refining problem solving skills."
-        else -> "Needs improvement. Your fundamentals could be stronger; review core concepts and practice more."
-    }
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp, horizontal = 8.dp),
-        shape = RoundedCornerShape(8.dp),
-        // 设置背景色为白色
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = subject,
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
-                color = Color.Black
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = "Score: $score",
-                style = MaterialTheme.typography.bodyLarge,
-                color = Color.Black
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = feedback,
-                style = MaterialTheme.typography.bodyMedium,
-                color = Color.DarkGray
-            )
-        }
-    }
-}
-
-
-
-@Composable
-fun ScoreAnalysisSection(
-    scores: Map<String, Int> = mapOf(
-        "Math" to 78,
-        "English" to 85,
-        "Physics" to 90,
-        "Chemistry" to 88,
-        "Biology" to 82
-    )
-) {
-    Column(modifier = Modifier.padding(16.dp)) {
-        Text(
-            text = "Score Analysis",
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold,
-            color = Color.Black
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        scores.forEach { (subject, score) ->
-            ScoreAnalysisCard(subject = subject, score = score)
-        }
-    }
-}
-
-
-// ------------------ ExamScoreBarChart Component ------------------
-
-@Composable
 fun ExamScoreBarChart(
     modifier: Modifier = Modifier,
-    scores: Map<String, Int> = mapOf(
-        "Math" to 78,
-        "English" to 85,
-        "Physics" to 90,
-        "Chemistry" to 88,
-        "Biology" to 82
-    )
+    scores: Map<String, Int> = emptyMap()
 ) {
     Canvas(modifier = modifier
         .fillMaxWidth()
@@ -762,11 +622,10 @@ fun ExamScoreBarChart(
         val rightMargin = 16.dp.toPx()
         val topMargin = 16.dp.toPx()
         val bottomMargin = 60.dp.toPx()
-
         val chartWidth = size.width - leftMargin - rightMargin
         val chartHeight = size.height - topMargin - bottomMargin
 
-        // Draw Y axis with arrowhead
+        // 绘制 Y 轴及箭头
         drawLine(
             color = Color.Black,
             start = Offset(leftMargin, topMargin),
@@ -774,7 +633,7 @@ fun ExamScoreBarChart(
             strokeWidth = 4f
         )
         val arrowSize = 8.dp.toPx()
-        val yArrowPath = androidx.compose.ui.graphics.Path().apply {
+        val yArrowPath = Path().apply {
             moveTo(leftMargin, topMargin)
             lineTo(leftMargin - arrowSize, topMargin + arrowSize)
             lineTo(leftMargin + arrowSize, topMargin + arrowSize)
@@ -782,14 +641,14 @@ fun ExamScoreBarChart(
         }
         drawPath(path = yArrowPath, color = Color.Black)
 
-        // Draw X axis with arrowhead
+        // 绘制 X 轴及箭头
         drawLine(
             color = Color.Black,
             start = Offset(leftMargin, size.height - bottomMargin),
             end = Offset(size.width - rightMargin, size.height - bottomMargin),
             strokeWidth = 4f
         )
-        val xArrowPath = androidx.compose.ui.graphics.Path().apply {
+        val xArrowPath = Path().apply {
             moveTo(size.width - rightMargin, size.height - bottomMargin)
             lineTo(size.width - rightMargin - arrowSize, size.height - bottomMargin - arrowSize / 2)
             lineTo(size.width - rightMargin - arrowSize, size.height - bottomMargin + arrowSize / 2)
@@ -797,60 +656,61 @@ fun ExamScoreBarChart(
         }
         drawPath(path = xArrowPath, color = Color.Black)
 
-        // Draw bars for each subject
+        // 绘制柱状图（若数据库中没有数据，则不显示）
         val numberOfBars = scores.size
-        val spacing = 16.dp.toPx()
-        val barWidth = (chartWidth - (numberOfBars + 1) * spacing) / numberOfBars
-        val maxScore = scores.values.maxOrNull()?.toFloat() ?: 100f
+        if(numberOfBars > 0) {
+            val spacing = 16.dp.toPx()
+            val barWidth = (chartWidth - (numberOfBars + 1) * spacing) / numberOfBars
+            val maxScore = scores.values.maxOrNull()?.toFloat() ?: 100f
+            val entries = scores.entries.toList()
+            entries.forEachIndexed { index, entry ->
+                val x = leftMargin + spacing * (index + 1) + barWidth * index
+                val barHeight = (entry.value / maxScore) * chartHeight
+                val y = size.height - bottomMargin - barHeight
 
-        val entries = scores.entries.toList()
-        entries.forEachIndexed { index, entry ->
-            val x = leftMargin + spacing * (index + 1) + barWidth * index
-            val barHeight = (entry.value / maxScore) * chartHeight
-            val y = size.height - bottomMargin - barHeight
-
-            drawRect(
-                color = Color.Cyan,
-                topLeft = Offset(x, y),
-                size = Size(barWidth, barHeight)
-            )
-
-            drawIntoCanvas { canvas ->
-                val paint = android.graphics.Paint().apply {
-                    color = android.graphics.Color.BLACK
-                    textSize = 40f
-                    textAlign = android.graphics.Paint.Align.CENTER
+                drawRect(
+                    color = Color.Cyan,
+                    topLeft = Offset(x, y),
+                    size = Size(barWidth, barHeight)
+                )
+                drawIntoCanvas { canvas ->
+                    val paint = android.graphics.Paint().apply {
+                        color = android.graphics.Color.BLACK
+                        textSize = 40f
+                        textAlign = android.graphics.Paint.Align.CENTER
+                    }
+                    canvas.nativeCanvas.drawText(
+                        entry.key,
+                        x + barWidth / 2,
+                        size.height - bottomMargin / 2,
+                        paint
+                    )
+                    canvas.nativeCanvas.drawText(
+                        entry.value.toString(),
+                        x + barWidth / 2,
+                        y - 10f,
+                        paint
+                    )
                 }
-                canvas.nativeCanvas.drawText(
-                    entry.key,
-                    x + barWidth / 2,
-                    size.height - bottomMargin / 2,
-                    paint
-                )
-                canvas.nativeCanvas.drawText(
-                    entry.value.toString(),
-                    x + barWidth / 2,
-                    y - 10f,
-                    paint
-                )
             }
         }
 
-        // Draw Y-axis tick labels
+        // 绘制 Y 轴刻度标签
         drawIntoCanvas { canvas ->
             val tickPaint = android.graphics.Paint().apply {
                 color = android.graphics.Color.BLACK
                 textSize = 40f
                 textAlign = android.graphics.Paint.Align.RIGHT
             }
+            val maxScoreLabel = scores.values.maxOrNull()?.toInt() ?: 100
             canvas.nativeCanvas.drawText(
-                maxScore.toInt().toString(),
+                maxScoreLabel.toString(),
                 leftMargin - 8,
                 topMargin + 40f,
                 tickPaint
             )
             canvas.nativeCanvas.drawText(
-                (maxScore / 2).toInt().toString(),
+                (maxScoreLabel / 2).toString(),
                 leftMargin - 8,
                 topMargin + chartHeight / 2 + 40f,
                 tickPaint
@@ -865,19 +725,134 @@ fun ExamScoreBarChart(
     }
 }
 
+@Composable
+fun ScoreAnalysisSection(
+    subjects: List<TaskEntity2>,
+    onDeleteSubject: (TaskEntity2) -> Unit,
+    onAddSubject: (String, Double) -> Unit
+) {
+    var newSubject by remember { mutableStateOf("") }
+    var newScore by remember { mutableStateOf("") }
+
+    Column(modifier = Modifier.padding(16.dp)) {
+        Text(
+            text = "Score Analysis",
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold,
+            color = Color.Black
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        // 输入区域：输入科目与分数
+        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            OutlinedTextField(
+                value = newSubject,
+                onValueChange = { newSubject = it },
+                label = { Text("Subject") },
+                modifier = Modifier.weight(1f)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            OutlinedTextField(
+                value = newScore,
+                onValueChange = { newScore = it },
+                label = { Text("Score") },
+                modifier = Modifier.weight(1f)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Button(
+                onClick = {
+                    val scoreDouble = newScore.toDoubleOrNull()
+                    if (newSubject.isNotBlank() && scoreDouble != null) {
+                        onAddSubject(newSubject, scoreDouble)
+                        newSubject = ""
+                        newScore = ""
+                    }
+                }
+            ) {
+                Text("Add")
+            }
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+        // 列出所有科目的 ScoreAnalysisCard
+        subjects.forEach { subjectEntity ->
+            ScoreAnalysisCard(
+                subject = subjectEntity.subject,
+                score = subjectEntity.score.toInt(),
+                onDelete = { onDeleteSubject(subjectEntity) }
+            )
+        }
+    }
+}
+
+
+@Composable
+fun ScoreAnalysisCard(
+    subject: String,
+    score: Int,
+    onDelete: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val feedback = when {
+        score >= 90 -> "Excellent performance! You've mastered this subject. Keep up the fantastic work!"
+        score in 80..89 -> "Good job overall! Your understanding is solid, but consider refining problem solving skills."
+        else -> "Needs improvement. Review core concepts and practice more."
+    }
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp, horizontal = 8.dp),
+        shape = RoundedCornerShape(8.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        // 在同一行显示科目信息及删除按钮
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = subject,
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "Score: $score",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = Color.Black
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = feedback,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.DarkGray
+                )
+            }
+            IconButton(onClick = onDelete) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = "Delete",
+                    tint = Color.Red
+                )
+            }
+        }
+    }
+}
+
+
 // ------------------ Login Screen ------------------
+
 @Composable
 fun LoginScreen(
     onNavigateToSignUp: () -> Unit,
     onLoginSuccess: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val taskViewModel: TaskViewModel = viewModel()
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf("") }
 
-    // 使用渐变背景，色彩鲜明
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -894,7 +869,6 @@ fun LoginScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // 添加主题标题，突出页面用途
             Text(
                 text = "Study & Time Manager",
                 style = MaterialTheme.typography.headlineLarge,
@@ -915,10 +889,10 @@ fun LoginScreen(
                 onValueChange = { username = it },
                 label = { Text("Username", color = Color.White) },
                 modifier = Modifier.fillMaxWidth(),
+                textStyle = androidx.compose.ui.text.TextStyle(color = Color.White),
                 colors = TextFieldDefaults.outlinedTextFieldColors(
                     focusedBorderColor = Color.Yellow,
                     cursorColor = Color.Yellow,
-                    textColor = Color.White,
                     unfocusedBorderColor = Color.White
                 )
             )
@@ -929,10 +903,10 @@ fun LoginScreen(
                 label = { Text("Password", color = Color.White) },
                 modifier = Modifier.fillMaxWidth(),
                 visualTransformation = PasswordVisualTransformation(),
+                textStyle = androidx.compose.ui.text.TextStyle(color = Color.White),
                 colors = TextFieldDefaults.outlinedTextFieldColors(
                     focusedBorderColor = Color.Yellow,
                     cursorColor = Color.Yellow,
-                    textColor = Color.White,
                     unfocusedBorderColor = Color.White
                 )
             )
@@ -946,16 +920,14 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(16.dp))
             Button(
                 onClick = {
-                    if (taskViewModel.login(username, password)) {
+                    if (username.isNotBlank() && password.isNotBlank()) {
                         onLoginSuccess()
                     } else {
-                        errorMessage = "Invalid username or password"
+                        errorMessage = "Please enter username and password"
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Yellow
-                )
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Yellow)
             ) {
                 Text("Login", color = Color.Black)
             }
@@ -969,20 +941,18 @@ fun LoginScreen(
     }
 }
 
-
 // ------------------ Sign Up Screen ------------------
+
 @Composable
 fun SignUpScreen(
     onBackToLogin: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val taskViewModel: TaskViewModel = viewModel()
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf("") }
 
-    // 使用鲜明的渐变背景
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -999,7 +969,6 @@ fun SignUpScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // 主题标题
             Text(
                 text = "Study & Time Manager",
                 style = MaterialTheme.typography.headlineLarge,
@@ -1020,10 +989,10 @@ fun SignUpScreen(
                 onValueChange = { username = it },
                 label = { Text("Username", color = Color.White) },
                 modifier = Modifier.fillMaxWidth(),
+                textStyle = androidx.compose.ui.text.TextStyle(color = Color.White),
                 colors = TextFieldDefaults.outlinedTextFieldColors(
                     focusedBorderColor = Color.Yellow,
                     cursorColor = Color.Yellow,
-                    textColor = Color.White,
                     unfocusedBorderColor = Color.White
                 )
             )
@@ -1034,10 +1003,10 @@ fun SignUpScreen(
                 label = { Text("Password", color = Color.White) },
                 modifier = Modifier.fillMaxWidth(),
                 visualTransformation = PasswordVisualTransformation(),
+                textStyle = androidx.compose.ui.text.TextStyle(color = Color.White),
                 colors = TextFieldDefaults.outlinedTextFieldColors(
                     focusedBorderColor = Color.Yellow,
                     cursorColor = Color.Yellow,
-                    textColor = Color.White,
                     unfocusedBorderColor = Color.White
                 )
             )
@@ -1048,10 +1017,10 @@ fun SignUpScreen(
                 label = { Text("Confirm Password", color = Color.White) },
                 modifier = Modifier.fillMaxWidth(),
                 visualTransformation = PasswordVisualTransformation(),
+                textStyle = androidx.compose.ui.text.TextStyle(color = Color.White),
                 colors = TextFieldDefaults.outlinedTextFieldColors(
                     focusedBorderColor = Color.Yellow,
                     cursorColor = Color.Yellow,
-                    textColor = Color.White,
                     unfocusedBorderColor = Color.White
                 )
             )
@@ -1065,16 +1034,14 @@ fun SignUpScreen(
             Spacer(modifier = Modifier.height(16.dp))
             Button(
                 onClick = {
-                    if (password == confirmPassword && taskViewModel.signUp(username, password)) {
+                    if (password == confirmPassword && username.isNotBlank() && password.isNotBlank()) {
                         onBackToLogin()
                     } else {
-                        errorMessage = "Passwords do not match or username already exists"
+                        errorMessage = "Passwords do not match or fields are empty"
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Yellow
-                )
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Yellow)
             ) {
                 Text("Sign Up", color = Color.Black)
             }

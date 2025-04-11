@@ -1,4 +1,4 @@
-package com.example.ass2
+package com.example.ass2.screens
 
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.runtime.Composable
@@ -12,4 +12,3 @@ fun AppNavigationPreview() {
         AppNavigation()
     }
 }
-
