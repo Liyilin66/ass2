@@ -2,6 +2,8 @@
 
 package com.example.ass2.Screens
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -14,6 +16,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -25,6 +28,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -35,6 +39,7 @@ import com.example.ass2.Models.PriorityTask
 import com.example.ass2.ViewModel.TaskViewModel
 import com.example.ass2.data.TaskEntity
 import com.example.ass2.data.TaskEntity2
+import java.util.Calendar
 
 // 分类前缀常量，用于区分不同任务类型
 private const val CATEGORY_URGENT_IMPORTANT = "Urgent & Important:"
@@ -305,29 +310,100 @@ fun ToggleableTaskCardMedium(
 
 // ------------------ Urgent & Important Screen ------------------
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun UrgentAndImportantScreen(onBackToMain: () -> Unit, modifier: Modifier = Modifier) {
     val taskViewModel: TaskViewModel = viewModel()
     val allTasks by taskViewModel.taskList.collectAsState(initial = emptyList())
-    // 根据任务标题中是否包含“Urgent & Important:”前缀过滤
+    // 根据任务标题前缀过滤出紧急且重要的任务
     val tasks = allTasks.filter { it.title.startsWith(CATEGORY_URGENT_IMPORTANT) }
+    // 根据 deadline 排序（如果 deadline 不为空，则转换为 LocalDate，否则归为最大日期值，使其排在后面）
+    val sortedTasks = tasks.sortedBy { task ->
+        if(task.deadline.isNotBlank()) {
+            try {
+                java.time.LocalDate.parse(task.deadline)
+            } catch (e: Exception) {
+                java.time.LocalDate.MAX
+            }
+        } else java.time.LocalDate.MAX
+    }
+
+    // 三个输入字段的状态：标题、截止日期、描述
     var newTaskTitle by remember { mutableStateOf("") }
+    var newTaskDeadline by remember { mutableStateOf("") }
+    var newTaskDescription by remember { mutableStateOf("") }
+    // 控制日期选择器显示与否
+    var showDatePicker by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+
+    // 若需要显示日期选择器则调用 DatePickerDialog
+    if (showDatePicker) {
+        val calendar = java.util.Calendar.getInstance()
+        android.app.DatePickerDialog(
+            context,
+            { _, year, month, dayOfMonth ->
+                // 注意：month 从0开始计数，格式化输出为“yyyy-MM-dd”
+                newTaskDeadline = "$year-${(month + 1).toString().padStart(2, '0')}-${
+                    dayOfMonth.toString().padStart(2, '0')
+                }"
+                showDatePicker = false
+            },
+            calendar.get(Calendar.YEAR),
+            calendar.get(Calendar.MONTH),
+            calendar.get(Calendar.DAY_OF_MONTH)
+        ).show()
+    }
 
     Scaffold(
         bottomBar = {
             Column(modifier = Modifier.padding(16.dp)) {
+                // 标题输入框
                 OutlinedTextField(
                     value = newTaskTitle,
                     onValueChange = { newTaskTitle = it },
-                    label = { Text("New Task") },
+                    label = { Text("Title") },
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(modifier = Modifier.height(8.dp))
+                // 截止日期输入框（只读，并设置点击时打开日期选择器）
+                OutlinedTextField(
+                    value = newTaskDeadline,
+                    onValueChange = { },
+                    label = { Text("Deadline") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { showDatePicker = true },
+                    readOnly = true,
+                    trailingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.DateRange,
+                            contentDescription = "Select Date",
+                            modifier = Modifier.clickable { showDatePicker = true }
+                        )
+                    }
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                // 描述输入框
+                OutlinedTextField(
+                    value = newTaskDescription,
+                    onValueChange = { newTaskDescription = it },
+                    label = { Text("Description") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                // 添加任务按钮
                 Button(
                     onClick = {
                         if (newTaskTitle.isNotBlank()) {
-                            taskViewModel.addTask("$CATEGORY_URGENT_IMPORTANT $newTaskTitle", "", "")
+                            taskViewModel.addTask(
+                                "$CATEGORY_URGENT_IMPORTANT $newTaskTitle",
+                                newTaskDeadline,
+                                newTaskDescription
+                            )
+                            // 重置输入框状态
                             newTaskTitle = ""
+                            newTaskDeadline = ""
+                            newTaskDescription = ""
                         }
                     },
                     modifier = Modifier.fillMaxWidth()
@@ -335,6 +411,7 @@ fun UrgentAndImportantScreen(onBackToMain: () -> Unit, modifier: Modifier = Modi
                     Text("Add Task")
                 }
                 Spacer(modifier = Modifier.height(8.dp))
+                // 返回主界面按钮
                 Button(
                     onClick = onBackToMain,
                     modifier = Modifier.fillMaxWidth(),
@@ -368,7 +445,8 @@ fun UrgentAndImportantScreen(onBackToMain: () -> Unit, modifier: Modifier = Modi
                 )
                 Spacer(modifier = Modifier.height(12.dp))
             }
-            items(tasks) { task ->
+            // 使用排序后的任务列表进行显示
+            items(sortedTasks) { task ->
                 ToggleableTaskCardLarge(
                     title = task.title.removePrefix("$CATEGORY_URGENT_IMPORTANT "),
                     deadline = task.deadline,
@@ -383,14 +461,47 @@ fun UrgentAndImportantScreen(onBackToMain: () -> Unit, modifier: Modifier = Modi
     }
 }
 
+
 // ------------------ Urgent but Not Important Screen ------------------
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun UrgentNotImportantScreen(onBackToMain: () -> Unit, modifier: Modifier = Modifier) {
     val taskViewModel: TaskViewModel = viewModel()
     val allTasks by taskViewModel.taskList.collectAsState(initial = emptyList())
+    // 根据任务标题前缀过滤
     val tasks = allTasks.filter { it.title.startsWith(CATEGORY_URGENT_NOT_IMPORTANT) }
+    val sortedTasks = tasks.sortedBy { task ->
+        if(task.deadline.isNotBlank()) {
+            try {
+                java.time.LocalDate.parse(task.deadline)
+            } catch(e: Exception) {
+                java.time.LocalDate.MAX
+            }
+        } else java.time.LocalDate.MAX
+    }
+
     var newTaskTitle by remember { mutableStateOf("") }
+    var newTaskDeadline by remember { mutableStateOf("") }
+    var newTaskDescription by remember { mutableStateOf("") }
+    var showDatePicker by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+
+    if (showDatePicker) {
+        val calendar = java.util.Calendar.getInstance()
+        android.app.DatePickerDialog(
+            context,
+            { _, year, month, dayOfMonth ->
+                newTaskDeadline = "$year-${(month + 1).toString().padStart(2, '0')}-${
+                    dayOfMonth.toString().padStart(2, '0')
+                }"
+                showDatePicker = false
+            },
+            calendar.get(Calendar.YEAR),
+            calendar.get(Calendar.MONTH),
+            calendar.get(Calendar.DAY_OF_MONTH)
+        ).show()
+    }
 
     Scaffold(
         bottomBar = {
@@ -398,15 +509,45 @@ fun UrgentNotImportantScreen(onBackToMain: () -> Unit, modifier: Modifier = Modi
                 OutlinedTextField(
                     value = newTaskTitle,
                     onValueChange = { newTaskTitle = it },
-                    label = { Text("New Task") },
+                    label = { Text("Title") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = newTaskDeadline,
+                    onValueChange = { },
+                    label = { Text("Deadline") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { showDatePicker = true },
+                    readOnly = true,
+                    trailingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.DateRange,
+                            contentDescription = "Select Date",
+                            modifier = Modifier.clickable { showDatePicker = true }
+                        )
+                    }
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = newTaskDescription,
+                    onValueChange = { newTaskDescription = it },
+                    label = { Text("Description") },
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Button(
                     onClick = {
                         if (newTaskTitle.isNotBlank()) {
-                            taskViewModel.addTask("$CATEGORY_URGENT_NOT_IMPORTANT $newTaskTitle", "", "")
+                            taskViewModel.addTask(
+                                "$CATEGORY_URGENT_NOT_IMPORTANT $newTaskTitle",
+                                newTaskDeadline,
+                                newTaskDescription
+                            )
                             newTaskTitle = ""
+                            newTaskDeadline = ""
+                            newTaskDescription = ""
                         }
                     },
                     modifier = Modifier.fillMaxWidth()
@@ -447,15 +588,14 @@ fun UrgentNotImportantScreen(onBackToMain: () -> Unit, modifier: Modifier = Modi
                 )
                 Spacer(modifier = Modifier.height(12.dp))
             }
-            items(tasks) { task ->
+            items(sortedTasks) { task ->
                 ToggleableTaskCardMedium(
                     title = task.title.removePrefix("$CATEGORY_URGENT_NOT_IMPORTANT "),
                     deadline = task.deadline,
                     description = task.description,
                     isCompleted = task.isCompleted,
                     onToggle = { taskViewModel.toggleTask(task) },
-                    onDelete = { taskViewModel.deleteTask(task) },
-                    modifier = Modifier.fillMaxWidth()
+                    onDelete = { taskViewModel.deleteTask(task) }
                 )
             }
             item { Spacer(modifier = Modifier.height(16.dp)) }
@@ -463,14 +603,46 @@ fun UrgentNotImportantScreen(onBackToMain: () -> Unit, modifier: Modifier = Modi
     }
 }
 
+
 // ------------------ Important Not Urgent Screen ------------------
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun ImportantNotUrgentScreen(onBackToMain: () -> Unit, modifier: Modifier = Modifier) {
     val taskViewModel: TaskViewModel = viewModel()
     val allTasks by taskViewModel.taskList.collectAsState(initial = emptyList())
     val tasks = allTasks.filter { it.title.startsWith(CATEGORY_IMPORTANT_NOT_URGENT) }
+    val sortedTasks = tasks.sortedBy { task ->
+        if(task.deadline.isNotBlank()) {
+            try {
+                java.time.LocalDate.parse(task.deadline)
+            } catch (e: Exception) {
+                java.time.LocalDate.MAX
+            }
+        } else java.time.LocalDate.MAX
+    }
+
     var newTaskTitle by remember { mutableStateOf("") }
+    var newTaskDeadline by remember { mutableStateOf("") }
+    var newTaskDescription by remember { mutableStateOf("") }
+    var showDatePicker by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+
+    if (showDatePicker) {
+        val calendar = java.util.Calendar.getInstance()
+        android.app.DatePickerDialog(
+            context,
+            { _, year, month, dayOfMonth ->
+                newTaskDeadline = "$year-${(month + 1).toString().padStart(2, '0')}-${
+                    dayOfMonth.toString().padStart(2, '0')
+                }"
+                showDatePicker = false
+            },
+            calendar.get(Calendar.YEAR),
+            calendar.get(Calendar.MONTH),
+            calendar.get(Calendar.DAY_OF_MONTH)
+        ).show()
+    }
 
     Scaffold(
         bottomBar = {
@@ -478,15 +650,45 @@ fun ImportantNotUrgentScreen(onBackToMain: () -> Unit, modifier: Modifier = Modi
                 OutlinedTextField(
                     value = newTaskTitle,
                     onValueChange = { newTaskTitle = it },
-                    label = { Text("New Task") },
+                    label = { Text("Title") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = newTaskDeadline,
+                    onValueChange = { },
+                    label = { Text("Deadline") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { showDatePicker = true },
+                    readOnly = true,
+                    trailingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.DateRange,
+                            contentDescription = "Select Date",
+                            modifier = Modifier.clickable { showDatePicker = true }
+                        )
+                    }
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = newTaskDescription,
+                    onValueChange = { newTaskDescription = it },
+                    label = { Text("Description") },
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Button(
                     onClick = {
                         if (newTaskTitle.isNotBlank()) {
-                            taskViewModel.addTask("$CATEGORY_IMPORTANT_NOT_URGENT $newTaskTitle", "", "")
+                            taskViewModel.addTask(
+                                "$CATEGORY_IMPORTANT_NOT_URGENT $newTaskTitle",
+                                newTaskDeadline,
+                                newTaskDescription
+                            )
                             newTaskTitle = ""
+                            newTaskDeadline = ""
+                            newTaskDescription = ""
                         }
                     },
                     modifier = Modifier.fillMaxWidth()
@@ -527,7 +729,7 @@ fun ImportantNotUrgentScreen(onBackToMain: () -> Unit, modifier: Modifier = Modi
                 )
                 Spacer(modifier = Modifier.height(12.dp))
             }
-            items(tasks) { task ->
+            items(sortedTasks) { task ->
                 ToggleableTaskCardMedium(
                     title = task.title.removePrefix("$CATEGORY_IMPORTANT_NOT_URGENT "),
                     deadline = task.deadline,
@@ -540,6 +742,7 @@ fun ImportantNotUrgentScreen(onBackToMain: () -> Unit, modifier: Modifier = Modi
         }
     }
 }
+
 
 // ------------------ Study & Review Page ------------------
 
