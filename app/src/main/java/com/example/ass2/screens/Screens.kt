@@ -111,9 +111,9 @@ fun HeaderSection() {
             fontWeight = FontWeight.Bold
         )
         Spacer(modifier = Modifier.height(8.dp))
-        Text("📆 Upcoming deadlines: 3", fontSize = 18.sp, color = Color.White)
-        Text("⏳ Uncompleted tasks: 5", fontSize = 18.sp, color = Color.White)
-        Text("🎯 Weekly study goal: 12/20 hrs", fontSize = 18.sp, color = Color.White)
+        Text("📆 Upcoming deadlines", fontSize = 18.sp, color = Color.White)
+        Text("⏳ Uncompleted tasks", fontSize = 18.sp, color = Color.White)
+        Text("🎯 Weekly study goal", fontSize = 18.sp, color = Color.White)
     }
 }
 
@@ -311,6 +311,7 @@ fun ToggleableTaskCardMedium(
 
 // ------------------ Urgent & Important Screen ------------------
 
+@OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun UrgentAndImportantScreen(onBackToMain: () -> Unit, modifier: Modifier = Modifier) {
