@@ -3,24 +3,18 @@ package com.example.ass2.network
 import retrofit2.Response
 import retrofit2.http.GET
 
-// 用于接收远程数据的实体对象（根据 API 返回数据格式自定义）
+// 原始数据模型保持不变
 data class AdvancedResponse(
-    val featureName: String,
-    val description: String,
-    val isEnabled: Boolean
+    val title: String,
+    val description: String
 )
 
-// 新增数据模型用于获取学习建议
-data class StudyAdviceResponse(
-    val advice: String
+// 新增包装类，用于解析顶层 JSON 对象中的 suggestions 字段
+data class AdvancedResponseWrapper(
+    val suggestions: List<AdvancedResponse>
 )
 
-// 定义 API 接口
 interface AdvancedApiService {
-    @GET("advancedFeatures")
-    suspend fun getAdvancedFeatures(): Response<List<AdvancedResponse>>
-
-    // 新增接口：获取每日学习建议
-    @GET("studyAdvice")
-    suspend fun getStudyAdvice(): Response<StudyAdviceResponse>
+    @GET("data.json")
+    suspend fun getAdvancedFeatures(): Response<AdvancedResponseWrapper>
 }

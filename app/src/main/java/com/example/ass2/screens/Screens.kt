@@ -40,6 +40,7 @@ import com.example.ass2.Models.PriorityTask
 import com.example.ass2.ViewModel.TaskViewModel
 import com.example.ass2.data.TaskEntity
 import com.example.ass2.data.TaskEntity2
+import com.example.ass2.network.AdvancedResponse
 import java.util.Calendar
 
 // 分类前缀常量，用于区分不同任务类型
@@ -56,6 +57,7 @@ fun StudyManagementScreen(
     onNavigateToNotUrgent: () -> Unit,
     onNavigateToImportant: () -> Unit,
     onNavigateToStudyAndReview: () -> Unit,
+    onNavigateToStudyAdvice: () -> Unit,  // 新增
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -92,7 +94,8 @@ fun StudyManagementScreen(
                 onNavigateToUrgent = onNavigateToUrgent,
                 onNavigateToNotUrgent = onNavigateToNotUrgent,
                 onNavigateToImportant = onNavigateToImportant,
-                onNavigateToStudyAndReview = onNavigateToStudyAndReview
+                onNavigateToStudyAndReview = onNavigateToStudyAndReview,
+                onNavigateToStudyAdvice = onNavigateToStudyAdvice  // 新增
             )
         }
     }
@@ -133,7 +136,8 @@ fun PriorityMatrix(
     onNavigateToUrgent: () -> Unit,
     onNavigateToNotUrgent: () -> Unit,
     onNavigateToImportant: () -> Unit,
-    onNavigateToStudyAndReview: () -> Unit
+    onNavigateToStudyAndReview: () -> Unit,
+    onNavigateToStudyAdvice: () -> Unit  // 新增
 ) {
     val priorityTasks = listOf(
         PriorityTask(
@@ -171,6 +175,16 @@ fun PriorityMatrix(
                 colors = listOf(Color(0xFF757575), Color(0xFFE0E0E0))
             ),
             onClick = onNavigateToStudyAndReview
+        ),
+        // 新增 Study Advice 卡片
+        PriorityTask(
+            title = "💡 Study Advice",
+            subtitle = "",
+            description = "",
+            backgroundBrush = Brush.horizontalGradient(
+                colors = listOf(Color(0xFF4CAF50), Color(0xFF81C784))
+            ),
+            onClick = onNavigateToStudyAdvice
         )
     )
     Column {
@@ -188,6 +202,7 @@ fun PriorityMatrix(
         }
     }
 }
+
 
 @Composable
 fun StudyTaskCard(
@@ -1131,6 +1146,108 @@ fun ScoreAnalysisCard(
                     tint = Color.Red
                 )
             }
+        }
+    }
+}
+
+@Composable
+fun StudyAdviceScreen(
+    onBack: () -> Unit,
+    viewModel: TaskViewModel = viewModel(),
+    modifier: Modifier = Modifier
+) {
+    val scrollState = rememberScrollState()
+    // 本地 state 用于保存网络加载后的高级功能数据
+    var advancedFeatures by remember { mutableStateOf<List<AdvancedResponse>>(emptyList()) }
+
+    // 页面启动时调用 loadAdvancedFeatures 加载数据
+    LaunchedEffect(Unit) {
+        viewModel.loadAdvancedFeatures { success ->
+            if (success) {
+                advancedFeatures = viewModel.advancedFeatures
+            }
+        }
+    }
+
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(
+                        Color(0xFF90CAF9), // 浅蓝色
+                        Color(0xFF64B5F6)  // 中蓝色
+                    )
+                )
+            )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(scrollState)
+                .padding(16.dp)
+                .padding(bottom = 80.dp),  // 为底部按钮预留空间
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "Study Advice",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                color = Color.White,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            // 如果数据为空，则显示加载中
+            if (advancedFeatures.isEmpty()) {
+                Text(
+                    text = "加载中...",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.White,
+                    modifier = Modifier.padding(top = 16.dp)
+                )
+            } else {
+                // 展示每个高级功能信息
+                advancedFeatures.forEach { feature ->
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp)
+                    ) {
+                        Text(
+                            text = feature.title,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = feature.description,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color.White
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+//                        Text(
+//                            text = if (feature.isEnabled) "启用" else "未启用",
+//                            style = MaterialTheme.typography.labelSmall,
+//                            color = Color.White
+//                        )
+                    }
+                }
+            }
+            // 可根据需要增加其它占位内容，使页面可滚动
+            Spacer(modifier = Modifier.height(600.dp))
+        }
+        Button(
+            onClick = onBack,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .padding(16.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color.White)
+        ) {
+            Text("Back To main", color = Color.Black)
         }
     }
 }

@@ -1,6 +1,7 @@
 package com.example.ass2.ViewModel
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.ass2.data.TaskDatabase
@@ -9,11 +10,16 @@ import com.example.ass2.data.TaskRepository
 import com.example.ass2.data.SubjectDatabase
 import com.example.ass2.data.TaskEntity2
 import com.example.ass2.data.SubjectRepository
+import com.example.ass2.data.AdvancedFeatureRepository  // 新增网络仓库的引用
 import com.example.ass2.network.AdvancedResponse
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import com.example.ass2.api.ApiClient
+
+sealed class Result<out T> {
+    data class Success<out T>(val data: T) : Result<T>()
+    data class Failure(val exception: Exception) : Result<Nothing>()
+}
 
 class TaskViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -31,7 +37,10 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
     private val _subjectList = MutableStateFlow<List<TaskEntity2>>(emptyList())
     val subjectList: StateFlow<List<TaskEntity2>> get() = _subjectList
 
-    // 网络加载的高级功能数据
+    // -------------------------
+    // 网络高级功能相关
+    // -------------------------
+    private val advancedFeatureRepository = AdvancedFeatureRepository()
     var advancedFeatures: List<AdvancedResponse> = emptyList()
         private set
 
@@ -48,14 +57,12 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     // ----------- Task 相关操作 -----------
-    // 从数据库中刷新任务列表
     fun refreshTasks() {
         viewModelScope.launch {
             _taskList.value = taskRepository.getAllTasks()
         }
     }
 
-    // 添加任务
     fun addTask(title: String, deadline: String, description: String) {
         viewModelScope.launch {
             val newTask = TaskEntity(
@@ -69,7 +76,6 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    // 切换任务完成状态
     fun toggleTask(task: TaskEntity) {
         viewModelScope.launch {
             val updatedTask = task.copy(isCompleted = !task.isCompleted)
@@ -78,14 +84,13 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    // 删除任务
     fun deleteTask(task: TaskEntity) {
         viewModelScope.launch {
             taskRepository.deleteTask(task)
             refreshTasks()
         }
     }
-    // 在 TaskViewModel 中添加 Subject 相关的删除功能
+
     fun deleteSubject(subject: TaskEntity2) {
         viewModelScope.launch {
             subjectRepository.deleteSubject(subject)
@@ -93,32 +98,33 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    // 加载网络数据（高级功能）
+    // 使用 AdvancedFeatureRepository 获取网络数据（高级功能）
+    // Using fold to handle success and failure
     fun loadAdvancedFeatures(onResult: (Boolean) -> Unit) {
         viewModelScope.launch {
-            try {
-                val response = ApiClient.service.getAdvancedFeatures()
-                if (response.isSuccessful && response.body() != null) {
-                    advancedFeatures = response.body()!!
+            val result = advancedFeatureRepository.fetchAdvancedFeatures()
+            result.fold(
+                onSuccess = { data ->
+                    advancedFeatures = data
                     onResult(true)
-                } else {
+                    Log.d("TaskViewModel", "Loaded advanced features: $data")
+                },
+                onFailure = { error ->
+                    Log.e("TaskViewModel", "Failed to load advanced features", error)
                     onResult(false)
                 }
-            } catch (e: Exception) {
-                onResult(false)
-            }
+            )
         }
     }
 
-    // ----------- Subject（科目）相关操作 -----------
-    // 刷新科目数据
+
+    // ----------- Subject（科目相关操作）-----------
     fun refreshSubjects() {
         viewModelScope.launch {
             _subjectList.value = subjectRepository.getAllSubjects()
         }
     }
 
-    // 添加科目（根据需要可扩展更新、删除等操作）
     fun addSubject(subject: String, score: Double) {
         viewModelScope.launch {
             subjectRepository.insertSubject(TaskEntity2(subject = subject, score = score))

@@ -61,11 +61,9 @@ fun AdvancedFeaturesScreen(viewModel: TaskViewModel, onBack: () -> Unit) {
                                     .padding(vertical = 4.dp)
                             ) {
                                 Column(modifier = Modifier.padding(16.dp)) {
-                                    Text(feature.featureName, style = MaterialTheme.typography.titleMedium)
+                                    Text(feature.title, style = MaterialTheme.typography.titleMedium)
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Text(feature.description, style = MaterialTheme.typography.bodyMedium)
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    Text("Enabled: ${feature.isEnabled}", style = MaterialTheme.typography.bodySmall)
                                 }
                             }
                         }

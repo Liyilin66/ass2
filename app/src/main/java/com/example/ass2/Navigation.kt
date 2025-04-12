@@ -1,5 +1,7 @@
 package com.example.ass2.Navigation
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import com.example.ass2.Screens.SignUpScreen
 import com.example.ass2.Screens.LoginScreen
 import com.example.ass2.Screens.StudyAndReviewContent
@@ -8,11 +10,13 @@ import com.example.ass2.Screens.UrgentAndImportantScreen
 import com.example.ass2.Screens.UrgentNotImportantScreen
 import com.example.ass2.Screens.ImportantNotUrgentScreen
 import com.example.ass2.Screens.AdvancedFeaturesScreen
+import com.example.ass2.Screens.StudyAdviceScreen
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
+
 enum class AppScreen {
     LOGIN,        // 登录页面
     SIGN_UP,      // 注册页面
@@ -22,8 +26,10 @@ enum class AppScreen {
     IMPORTANT,
     STUDY_REVIEW,
     ADVANCED_FEATURES,  // 高级功能页面
+    STUDY_ADVICE        // 新增 Study Advice 页面
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun AppNavigation() {
     var currentScreen by remember { mutableStateOf(AppScreen.LOGIN) } // 默认启动登录页面
@@ -46,6 +52,7 @@ fun AppNavigation() {
                     onNavigateToNotUrgent = { currentScreen = AppScreen.NOT_URGENT },
                     onNavigateToImportant = { currentScreen = AppScreen.IMPORTANT },
                     onNavigateToStudyAndReview = { currentScreen = AppScreen.STUDY_REVIEW },
+                    onNavigateToStudyAdvice = { currentScreen = AppScreen.STUDY_ADVICE }  // 新增 Study Advice 导航
                 )
             }
             AppScreen.URGENT -> {
@@ -62,11 +69,13 @@ fun AppNavigation() {
             }
             AppScreen.ADVANCED_FEATURES -> {
                 AdvancedFeaturesScreen(
-                    viewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
+                    viewModel = viewModel(),
                     onBack = { currentScreen = AppScreen.MAIN }
                 )
             }
-
+            AppScreen.STUDY_ADVICE -> {
+                StudyAdviceScreen(onBack = { currentScreen = AppScreen.MAIN })
+            }
         }
     }
 }
