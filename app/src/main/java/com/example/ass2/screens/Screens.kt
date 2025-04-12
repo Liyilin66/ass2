@@ -176,11 +176,11 @@ fun PriorityMatrix(
             ),
             onClick = onNavigateToStudyAndReview
         ),
-        // 新增 Study Advice 卡片
+        // 新增 Study Advice 卡片，并加入描述文字
         PriorityTask(
             title = "💡 Study Advice",
-            subtitle = "",
-            description = "",
+            subtitle = "Some study methods",
+            description = "Online advice",
             backgroundBrush = Brush.horizontalGradient(
                 colors = listOf(Color(0xFF4CAF50), Color(0xFF81C784))
             ),
@@ -1190,25 +1190,26 @@ fun StudyAdviceScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(modifier = Modifier.height(16.dp))
+            // 修改标题文本：颜色改为黑色，字体增大
             Text(
                 text = "Study Advice",
-                style = MaterialTheme.typography.headlineMedium,
+                style = MaterialTheme.typography.headlineMedium.copy(fontSize = 32.sp),
                 fontWeight = FontWeight.Bold,
-                color = Color.White,
+                color = Color.Black,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(modifier = Modifier.height(16.dp))
-            // 如果数据为空，则显示加载中
+            // 如果数据为空，则显示加载中（文本颜色和字号也作了调整）
             if (advancedFeatures.isEmpty()) {
                 Text(
                     text = "加载中...",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.White,
+                    style = MaterialTheme.typography.bodyMedium.copy(fontSize = 18.sp),
+                    color = Color.Black,
                     modifier = Modifier.padding(top = 16.dp)
                 )
             } else {
-                // 展示每个高级功能信息
+                // 展示每个高级功能信息，标题和描述均设置为黑色并适当放大字体
                 advancedFeatures.forEach { feature ->
                     Column(
                         modifier = Modifier
@@ -1217,26 +1218,21 @@ fun StudyAdviceScreen(
                     ) {
                         Text(
                             text = feature.title,
-                            style = MaterialTheme.typography.titleMedium,
+                            style = MaterialTheme.typography.titleMedium.copy(fontSize = 24.sp),
                             fontWeight = FontWeight.Bold,
-                            color = Color.White
+                            color = Color.Black
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = feature.description,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = Color.White
+                            style = MaterialTheme.typography.bodyMedium.copy(fontSize = 20.sp),
+                            color = Color.Black
                         )
                         Spacer(modifier = Modifier.height(4.dp))
-//                        Text(
-//                            text = if (feature.isEnabled) "启用" else "未启用",
-//                            style = MaterialTheme.typography.labelSmall,
-//                            color = Color.White
-//                        )
                     }
                 }
             }
-            // 可根据需要增加其它占位内容，使页面可滚动
+            // 增加一个占位，使页面可滚动
             Spacer(modifier = Modifier.height(600.dp))
         }
         Button(
@@ -1251,6 +1247,7 @@ fun StudyAdviceScreen(
         }
     }
 }
+
 
 
 // ------------------ Login Screen ------------------
