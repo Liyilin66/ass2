@@ -2,6 +2,7 @@
 
 package com.example.ass2.Screens
 
+import androidx.compose.ui.text.TextStyle
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Canvas
@@ -343,9 +344,7 @@ fun UrgentAndImportantScreen(onBackToMain: () -> Unit, modifier: Modifier = Modi
             context,
             { _, year, month, dayOfMonth ->
                 // 注意：month 从0开始计数，格式化输出为“yyyy-MM-dd”
-                newTaskDeadline = "$year-${(month + 1).toString().padStart(2, '0')}-${
-                    dayOfMonth.toString().padStart(2, '0')
-                }"
+                newTaskDeadline = "$year-${(month + 1).toString().padStart(2, '0')}-${dayOfMonth.toString().padStart(2, '0')}"
                 showDatePicker = false
             },
             calendar.get(Calendar.YEAR),
@@ -357,19 +356,30 @@ fun UrgentAndImportantScreen(onBackToMain: () -> Unit, modifier: Modifier = Modi
     Scaffold(
         bottomBar = {
             Column(modifier = Modifier.padding(16.dp)) {
-                // 标题输入框
+                // Title 输入框，标签文字设置为黑色且加粗
                 OutlinedTextField(
                     value = newTaskTitle,
                     onValueChange = { newTaskTitle = it },
-                    label = { Text("Title") },
-                    modifier = Modifier.fillMaxWidth()
+                    label = {
+                        Text("Title", color = Color.Black, fontWeight = FontWeight.Bold)
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    textStyle = TextStyle(color = Color.Black),
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                        containerColor = Color.White,
+                        focusedBorderColor = Color.White,
+                        unfocusedBorderColor = Color.White,
+                        cursorColor = Color.Black
+                    )
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-                // 截止日期输入框（只读，并设置点击时打开日期选择器）
+                // Deadline 输入框，标签文字设置为黑色且加粗
                 OutlinedTextField(
                     value = newTaskDeadline,
                     onValueChange = { },
-                    label = { Text("Deadline") },
+                    label = {
+                        Text("Deadline", color = Color.Black, fontWeight = FontWeight.Bold)
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable { showDatePicker = true },
@@ -380,15 +390,31 @@ fun UrgentAndImportantScreen(onBackToMain: () -> Unit, modifier: Modifier = Modi
                             contentDescription = "Select Date",
                             modifier = Modifier.clickable { showDatePicker = true }
                         )
-                    }
+                    },
+                    textStyle = TextStyle(color = Color.Black),
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                        containerColor = Color.White,
+                        focusedBorderColor = Color.White,
+                        unfocusedBorderColor = Color.White,
+                        cursorColor = Color.Black
+                    )
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-                // 描述输入框
+                // Description 输入框，标签文字设置为黑色且加粗
                 OutlinedTextField(
                     value = newTaskDescription,
                     onValueChange = { newTaskDescription = it },
-                    label = { Text("Description") },
-                    modifier = Modifier.fillMaxWidth()
+                    label = {
+                        Text("Description", color = Color.Black, fontWeight = FontWeight.Bold)
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    textStyle = TextStyle(color = Color.Black),
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                        containerColor = Color.White,
+                        focusedBorderColor = Color.White,
+                        unfocusedBorderColor = Color.White,
+                        cursorColor = Color.Black
+                    )
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 // 添加任务按钮
@@ -469,13 +495,14 @@ fun UrgentAndImportantScreen(onBackToMain: () -> Unit, modifier: Modifier = Modi
 fun UrgentNotImportantScreen(onBackToMain: () -> Unit, modifier: Modifier = Modifier) {
     val taskViewModel: TaskViewModel = viewModel()
     val allTasks by taskViewModel.taskList.collectAsState(initial = emptyList())
-    // 根据任务标题前缀过滤
+    // 过滤标题以 CATEGORY_URGENT_NOT_IMPORTANT 开头的任务
     val tasks = allTasks.filter { it.title.startsWith(CATEGORY_URGENT_NOT_IMPORTANT) }
+    // 根据 deadline 排序：若 deadline 为空，则认为其值为 LocalDate.MAX
     val sortedTasks = tasks.sortedBy { task ->
-        if(task.deadline.isNotBlank()) {
+        if (task.deadline.isNotBlank()) {
             try {
                 java.time.LocalDate.parse(task.deadline)
-            } catch(e: Exception) {
+            } catch (e: Exception) {
                 java.time.LocalDate.MAX
             }
         } else java.time.LocalDate.MAX
@@ -492,31 +519,42 @@ fun UrgentNotImportantScreen(onBackToMain: () -> Unit, modifier: Modifier = Modi
         android.app.DatePickerDialog(
             context,
             { _, year, month, dayOfMonth ->
-                newTaskDeadline = "$year-${(month + 1).toString().padStart(2, '0')}-${
-                    dayOfMonth.toString().padStart(2, '0')
-                }"
+                newTaskDeadline = "$year-${(month + 1).toString().padStart(2, '0')}-${dayOfMonth.toString().padStart(2, '0')}"
                 showDatePicker = false
             },
-            calendar.get(Calendar.YEAR),
-            calendar.get(Calendar.MONTH),
-            calendar.get(Calendar.DAY_OF_MONTH)
+            calendar.get(java.util.Calendar.YEAR),
+            calendar.get(java.util.Calendar.MONTH),
+            calendar.get(java.util.Calendar.DAY_OF_MONTH)
         ).show()
     }
 
     Scaffold(
         bottomBar = {
             Column(modifier = Modifier.padding(16.dp)) {
+                // Title 输入框
                 OutlinedTextField(
                     value = newTaskTitle,
                     onValueChange = { newTaskTitle = it },
-                    label = { Text("Title") },
-                    modifier = Modifier.fillMaxWidth()
+                    label = {
+                        Text("Title", color = Color.Black, fontWeight = FontWeight.Bold)
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    textStyle = TextStyle(color = Color.Black),
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                        containerColor = Color.White,
+                        focusedBorderColor = Color.White,
+                        unfocusedBorderColor = Color.White,
+                        cursorColor = Color.Black
+                    )
                 )
                 Spacer(modifier = Modifier.height(8.dp))
+                // Deadline 输入框（只读，并添加点击事件打开日历选择器）
                 OutlinedTextField(
                     value = newTaskDeadline,
                     onValueChange = { },
-                    label = { Text("Deadline") },
+                    label = {
+                        Text("Deadline", color = Color.Black, fontWeight = FontWeight.Bold)
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable { showDatePicker = true },
@@ -527,16 +565,34 @@ fun UrgentNotImportantScreen(onBackToMain: () -> Unit, modifier: Modifier = Modi
                             contentDescription = "Select Date",
                             modifier = Modifier.clickable { showDatePicker = true }
                         )
-                    }
+                    },
+                    textStyle = TextStyle(color = Color.Black),
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                        containerColor = Color.White,
+                        focusedBorderColor = Color.White,
+                        unfocusedBorderColor = Color.White,
+                        cursorColor = Color.Black
+                    )
                 )
                 Spacer(modifier = Modifier.height(8.dp))
+                // Description 输入框
                 OutlinedTextField(
                     value = newTaskDescription,
                     onValueChange = { newTaskDescription = it },
-                    label = { Text("Description") },
-                    modifier = Modifier.fillMaxWidth()
+                    label = {
+                        Text("Description", color = Color.Black, fontWeight = FontWeight.Bold)
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    textStyle = TextStyle(color = Color.Black),
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                        containerColor = Color.White,
+                        focusedBorderColor = Color.White,
+                        unfocusedBorderColor = Color.White,
+                        cursorColor = Color.Black
+                    )
                 )
                 Spacer(modifier = Modifier.height(8.dp))
+                // 添加任务按钮
                 Button(
                     onClick = {
                         if (newTaskTitle.isNotBlank()) {
@@ -555,6 +611,7 @@ fun UrgentNotImportantScreen(onBackToMain: () -> Unit, modifier: Modifier = Modi
                     Text("Add Task")
                 }
                 Spacer(modifier = Modifier.height(8.dp))
+                // 返回主界面按钮
                 Button(
                     onClick = onBackToMain,
                     modifier = Modifier.fillMaxWidth(),
@@ -604,6 +661,7 @@ fun UrgentNotImportantScreen(onBackToMain: () -> Unit, modifier: Modifier = Modi
 }
 
 
+
 // ------------------ Important Not Urgent Screen ------------------
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -611,7 +669,9 @@ fun UrgentNotImportantScreen(onBackToMain: () -> Unit, modifier: Modifier = Modi
 fun ImportantNotUrgentScreen(onBackToMain: () -> Unit, modifier: Modifier = Modifier) {
     val taskViewModel: TaskViewModel = viewModel()
     val allTasks by taskViewModel.taskList.collectAsState(initial = emptyList())
+    // 过滤标题以 CATEGORY_IMPORTANT_NOT_URGENT 开头的任务
     val tasks = allTasks.filter { it.title.startsWith(CATEGORY_IMPORTANT_NOT_URGENT) }
+    // 根据 deadline 排序
     val sortedTasks = tasks.sortedBy { task ->
         if(task.deadline.isNotBlank()) {
             try {
@@ -633,31 +693,42 @@ fun ImportantNotUrgentScreen(onBackToMain: () -> Unit, modifier: Modifier = Modi
         android.app.DatePickerDialog(
             context,
             { _, year, month, dayOfMonth ->
-                newTaskDeadline = "$year-${(month + 1).toString().padStart(2, '0')}-${
-                    dayOfMonth.toString().padStart(2, '0')
-                }"
+                newTaskDeadline = "$year-${(month + 1).toString().padStart(2, '0')}-${dayOfMonth.toString().padStart(2, '0')}"
                 showDatePicker = false
             },
-            calendar.get(Calendar.YEAR),
-            calendar.get(Calendar.MONTH),
-            calendar.get(Calendar.DAY_OF_MONTH)
+            calendar.get(java.util.Calendar.YEAR),
+            calendar.get(java.util.Calendar.MONTH),
+            calendar.get(java.util.Calendar.DAY_OF_MONTH)
         ).show()
     }
 
     Scaffold(
         bottomBar = {
             Column(modifier = Modifier.padding(16.dp)) {
+                // Title 输入框
                 OutlinedTextField(
                     value = newTaskTitle,
                     onValueChange = { newTaskTitle = it },
-                    label = { Text("Title") },
-                    modifier = Modifier.fillMaxWidth()
+                    label = {
+                        Text("Title", color = Color.Black, fontWeight = FontWeight.Bold)
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    textStyle = TextStyle(color = Color.Black),
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                        containerColor = Color.White,
+                        focusedBorderColor = Color.White,
+                        unfocusedBorderColor = Color.White,
+                        cursorColor = Color.Black
+                    )
                 )
                 Spacer(modifier = Modifier.height(8.dp))
+                // Deadline 输入框
                 OutlinedTextField(
                     value = newTaskDeadline,
                     onValueChange = { },
-                    label = { Text("Deadline") },
+                    label = {
+                        Text("Deadline", color = Color.Black, fontWeight = FontWeight.Bold)
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable { showDatePicker = true },
@@ -668,16 +739,34 @@ fun ImportantNotUrgentScreen(onBackToMain: () -> Unit, modifier: Modifier = Modi
                             contentDescription = "Select Date",
                             modifier = Modifier.clickable { showDatePicker = true }
                         )
-                    }
+                    },
+                    textStyle = TextStyle(color = Color.Black),
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                        containerColor = Color.White,
+                        focusedBorderColor = Color.White,
+                        unfocusedBorderColor = Color.White,
+                        cursorColor = Color.Black
+                    )
                 )
                 Spacer(modifier = Modifier.height(8.dp))
+                // Description 输入框
                 OutlinedTextField(
                     value = newTaskDescription,
                     onValueChange = { newTaskDescription = it },
-                    label = { Text("Description") },
-                    modifier = Modifier.fillMaxWidth()
+                    label = {
+                        Text("Description", color = Color.Black, fontWeight = FontWeight.Bold)
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    textStyle = TextStyle(color = Color.Black),
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                        containerColor = Color.White,
+                        focusedBorderColor = Color.White,
+                        unfocusedBorderColor = Color.White,
+                        cursorColor = Color.Black
+                    )
                 )
                 Spacer(modifier = Modifier.height(8.dp))
+                // 添加任务按钮
                 Button(
                     onClick = {
                         if (newTaskTitle.isNotBlank()) {
@@ -696,6 +785,7 @@ fun ImportantNotUrgentScreen(onBackToMain: () -> Unit, modifier: Modifier = Modi
                     Text("Add Task")
                 }
                 Spacer(modifier = Modifier.height(8.dp))
+                // 返回主界面按钮
                 Button(
                     onClick = onBackToMain,
                     modifier = Modifier.fillMaxWidth(),
@@ -742,6 +832,7 @@ fun ImportantNotUrgentScreen(onBackToMain: () -> Unit, modifier: Modifier = Modi
         }
     }
 }
+
 
 
 // ------------------ Study & Review Page ------------------
