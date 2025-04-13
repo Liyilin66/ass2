@@ -44,25 +44,32 @@ android {
 }
 
 dependencies {
+    // 移除对自身的引用
+    // implementation(project(":app"))
+    // implementation(project(":app"))
+    // implementation(project(":app"))
+    implementation(libs.core.ktx)
     // Room 依赖
     val roomVersion = "2.4.3"
     implementation("androidx.room:room-runtime:$roomVersion")
     implementation("androidx.room:room-ktx:$roomVersion")
-    // 如果需要使用代码生成，可以使用 KSP 进行注解处理
     ksp("androidx.room:room-compiler:$roomVersion")
 
     // Retrofit & Gson 转换器
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
 
-    // Jetpack Compose（使用 BOM 管理版本）
+    // Jetpack Compose
     implementation(platform(libs.androidx.compose.bom))
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.ui:ui-tooling-preview")
     debugImplementation("androidx.compose.ui:ui-tooling")
-    implementation ("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
-    // Lifecycle 和 Activity Compose
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:${libs.versions.lifecycleRuntimeKtx.get()}")
     implementation("androidx.activity:activity-compose:${libs.versions.activityCompose.get()}")
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("androidx.arch.core:core-testing:2.1.0")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.4")
+    testImplementation ("org.robolectric:robolectric:4.8")
 }
