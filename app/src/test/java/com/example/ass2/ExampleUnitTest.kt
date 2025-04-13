@@ -74,8 +74,6 @@ class FakeAdvancedFeatureRepository : IAdvancedFeatureRepository {
 
 // ----- Testable ViewModel -----
 // 为了方便测试，我们构造一个可注入 fake 仓库的 ViewModel，逻辑与原始 TaskViewModel 保持一致
-@RunWith(RobolectricTestRunner::class)
-@OptIn(ExperimentalCoroutinesApi::class)
 class TestableTaskViewModel(
     application: Application,
     private val fakeTaskRepository: ITaskRepository,
